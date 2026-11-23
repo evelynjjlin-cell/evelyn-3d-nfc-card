@@ -19,10 +19,14 @@ export type CameraPresetId =
   | 'uxSign'
   | 'gameSign'
   | 'mailbox'
-  | 'closeupTrees'
-  | 'closeupProps'
-  | 'closeupBridgeCreekMailbox'
-  | 'closeupSigns';
+  | 'closeupBroadleaf'
+  | 'closeupEvergreen'
+  | 'closeupDesignSign'
+  | 'closeupGameSign'
+  | 'closeupTrailStones'
+  | 'closeupBridgeApproaches'
+  | 'closeupCreekWater'
+  | 'closeupPlaque';
 
 export interface CameraViewPreset {
   id: CameraPresetId;
@@ -48,12 +52,14 @@ export interface PersonalConfig {
   };
   destinations: {
     uxPortfolioLabel: string;
+    uxPortfolioTheme: string;
     uxPortfolioUrl: string;
     gamePortfolioLabel: string;
+    gamePortfolioTheme: string;
     /**
      * Leave empty ("") while the Game Portfolio is still in development.
-     * When empty, selecting the Play Path sign opens the "New world in progress." notice.
-     * Once set to a valid https:// URL, the sign navigates directly like the Design Path sign.
+     * When empty, selecting the Game Trail sign opens the "New world in progress." notice.
+     * Once set to a valid https:// URL, the sign navigates directly like the Design Trail sign.
      */
     gamePortfolioUrl: string;
     gamePortfolioPlaceholderTitle: string;
@@ -91,13 +97,15 @@ export const PERSONAL_CONFIG: PersonalConfig = {
     projectSubtitle: 'The Crossroads',
   },
   destinations: {
-    uxPortfolioLabel: 'Design Path',
+    uxPortfolioLabel: 'Design Trail',
+    uxPortfolioTheme: 'Design Stories',
     uxPortfolioUrl: 'https://evelynjlin.com',
-    gamePortfolioLabel: 'Play Path',
+    gamePortfolioLabel: 'Game Trail',
+    gamePortfolioTheme: 'Game Worlds',
     gamePortfolioUrl: '',
     gamePortfolioPlaceholderTitle: 'New world in progress.',
     gamePortfolioPlaceholderMessage:
-      'Evelyn’s dedicated Game UX & Game-Inspired Design portfolio is currently being crafted. In the meantime, explore her Design Path portfolio or save her contact card below.',
+      'Game Worlds — Evelyn’s dedicated Game UX, interactive environments, and game-inspired design portfolio is currently being crafted. In the meantime, explore Design Stories on her Design Trail or save her contact card below.',
   },
   contact: {
     email: '',
@@ -179,7 +187,7 @@ export const PERSONAL_CONFIG: PersonalConfig = {
     },
     uxSign: {
       id: 'uxSign',
-      label: 'Design Path',
+      label: 'Design Trail',
       azimuth: -0.26,
       polar: 1.04,
       distanceMobile: 15.2,
@@ -188,7 +196,7 @@ export const PERSONAL_CONFIG: PersonalConfig = {
     },
     gameSign: {
       id: 'gameSign',
-      label: 'Play Path',
+      label: 'Game Trail',
       azimuth: 0.26,
       polar: 1.04,
       distanceMobile: 15.2,
@@ -204,41 +212,77 @@ export const PERSONAL_CONFIG: PersonalConfig = {
       distanceDesktop: 9.2,
       target: [0.65, 0.55, 0.95],
     },
-    closeupTrees: {
-      id: 'closeupTrees',
-      label: 'Foliage & Trees Close-up',
-      azimuth: -0.18,
+    closeupBroadleaf: {
+      id: 'closeupBroadleaf',
+      label: 'Broadleaf Hero Tree Close-up',
+      azimuth: -0.22,
+      polar: 1.14,
+      distanceMobile: 7.4,
+      distanceDesktop: 5.4,
+      target: [-2.35, 1.85, -1.95],
+    },
+    closeupEvergreen: {
+      id: 'closeupEvergreen',
+      label: 'Evergreen Tree Close-up',
+      azimuth: 0.22,
       polar: 1.12,
-      distanceMobile: 8.6,
-      distanceDesktop: 6.8,
-      target: [-1.15, 1.35, -1.55],
+      distanceMobile: 7.2,
+      distanceDesktop: 5.2,
+      target: [2.15, 1.75, -1.85],
     },
-    closeupProps: {
-      id: 'closeupProps',
-      label: 'Bridge, Creek & Mailbox Close-up',
-      azimuth: 0.20,
-      polar: 1.03,
-      distanceMobile: 8.4,
-      distanceDesktop: 6.2,
-      target: [0.32, 0.62, 0.42],
+    closeupDesignSign: {
+      id: 'closeupDesignSign',
+      label: 'Design Trail Sign Close-up',
+      azimuth: -0.18,
+      polar: 1.08,
+      distanceMobile: 6.2,
+      distanceDesktop: 4.4,
+      target: [-1.52, 1.12, -0.68],
     },
-    closeupBridgeCreekMailbox: {
-      id: 'closeupBridgeCreekMailbox',
-      label: 'Bridge, Creek & Mailbox Close-up',
-      azimuth: 0.20,
-      polar: 1.02,
-      distanceMobile: 8.2,
-      distanceDesktop: 6.1,
-      target: [0.28, 0.55, 0.45],
+    closeupGameSign: {
+      id: 'closeupGameSign',
+      label: 'Game Trail Sign Close-up',
+      azimuth: 0.18,
+      polar: 1.08,
+      distanceMobile: 6.2,
+      distanceDesktop: 4.4,
+      target: [1.52, 1.12, -0.64],
     },
-    closeupSigns: {
-      id: 'closeupSigns',
-      label: 'Design Path & Play Path Signs Close-up',
-      azimuth: -0.02,
-      polar: 1.06,
-      distanceMobile: 9.2,
-      distanceDesktop: 6.9,
-      target: [0.0, 0.96, -0.38],
+    closeupTrailStones: {
+      id: 'closeupTrailStones',
+      label: 'Woodland Trail & Stepping Stones Close-up',
+      azimuth: -0.06,
+      polar: 0.92,
+      distanceMobile: 6.8,
+      distanceDesktop: 4.9,
+      target: [0.0, 0.35, 0.65],
+    },
+    closeupBridgeApproaches: {
+      id: 'closeupBridgeApproaches',
+      label: 'Bridge Approaches Close-up',
+      azimuth: 0.26,
+      polar: 0.98,
+      distanceMobile: 6.6,
+      distanceDesktop: 4.8,
+      target: [0.05, 0.42, 0.14],
+    },
+    closeupCreekWater: {
+      id: 'closeupCreekWater',
+      label: 'Creek & Water Material Close-up',
+      azimuth: -0.24,
+      polar: 0.96,
+      distanceMobile: 6.8,
+      distanceDesktop: 4.9,
+      target: [-0.85, 0.32, 0.12],
+    },
+    closeupPlaque: {
+      id: 'closeupPlaque',
+      label: 'Evelyn Lin Identity Plaque Close-up',
+      azimuth: 0.02,
+      polar: 1.16,
+      distanceMobile: 6.4,
+      distanceDesktop: 4.6,
+      target: [0.0, -0.35, 3.15],
     },
   },
 };

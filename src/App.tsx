@@ -19,6 +19,7 @@ declare global {
   interface Window {
     __setCrossroadsView?: (preset: CameraViewPreset['id']) => void;
     __openMailboxLetter?: (open: boolean) => void;
+    __openGameTrailModal?: (open: boolean) => void;
     __crossroadsSceneReady?: boolean;
     __r3fRenderNow?: () => string;
   }
@@ -40,18 +41,8 @@ function checkWebGLAvailable(): boolean {
 function getInitialPresetFromUrl(): CameraViewPreset['id'] {
   if (typeof window === 'undefined') return 'initial';
   const params = new URLSearchParams(window.location.search);
-  const view = params.get('view');
-  if (
-    view === 'initial' ||
-    view === 'rotated' ||
-    view === 'uxSign' ||
-    view === 'gameSign' ||
-    view === 'mailbox' ||
-    view === 'closeupTrees' ||
-    view === 'closeupProps' ||
-    view === 'closeupBridgeCreekMailbox' ||
-    view === 'closeupSigns'
-  ) {
+  const view = params.get('view') as CameraViewPreset['id'] | null;
+  if (view && view in PERSONAL_CONFIG.cameraPresets) {
     return view;
   }
   return 'initial';
@@ -84,9 +75,13 @@ export const App: React.FC = () => {
       setIsMailboxOpen(open);
       setIsContactPanelOpen(open);
     };
+    window.__openGameTrailModal = (open: boolean) => {
+      setIsGameModalOpen(open);
+    };
     return () => {
       delete window.__setCrossroadsView;
       delete window.__openMailboxLetter;
+      delete window.__openGameTrailModal;
     };
   }, []);
 

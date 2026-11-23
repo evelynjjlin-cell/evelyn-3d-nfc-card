@@ -189,15 +189,15 @@ export const Mailbox: React.FC<MailboxProps> = ({
             castShadow={shadows}
           />
         )}
-        <mesh position={[1.08, 1.33, 1.32]} rotation={[0.25, -0.38, 0]}>
+        <mesh position={[1.18, 1.35, 1.54]} rotation={[0.25, -0.38, 0]}>
           <cylinderGeometry args={[0.034, 0.034, 0.015, 16]} />
           <primitive object={materials.waxSeal} attach="material" />
         </mesh>
       </group>
 
-      {/* Compact, artisanal engraved brass nameplate mounted neatly below the corbel brace */}
+      {/* Compact engraved brass nameplate mounted cleanly on the mailbox post */}
       <group
-        position={[1.08, 0.55, 1.33]}
+        position={[1.18, 0.56, 1.55]}
         rotation={[-0.06, THREE.MathUtils.degToRad(-22), 0]}
       >
         <mesh castShadow={shadows}>
@@ -216,7 +216,7 @@ export const Mailbox: React.FC<MailboxProps> = ({
       </group>
 
       {(hovered || activeHover === 'mailbox' || isOpen) && (
-        <mesh position={[1.18, 0.19, 1.08]} rotation={[-Math.PI / 2, 0, 0]}>
+        <mesh position={[1.28, 0.21, 1.36]} rotation={[-Math.PI / 2, 0, 0]}>
           <ringGeometry args={[0.26, 0.39, 32]} />
           <meshBasicMaterial color="#DCC99D" transparent opacity={0.68} side={THREE.DoubleSide} />
         </mesh>
@@ -224,7 +224,7 @@ export const Mailbox: React.FC<MailboxProps> = ({
 
       <mesh
         name="Hitbox_Mailbox"
-        position={[1.18, 0.94, 1.1]}
+        position={[1.28, 0.96, 1.38]}
         rotation={[0, THREE.MathUtils.degToRad(-22), 0]}
         onPointerDown={handlePointerDown}
         onClick={handleClick}

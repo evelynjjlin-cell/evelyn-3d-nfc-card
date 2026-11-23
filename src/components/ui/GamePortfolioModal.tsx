@@ -36,7 +36,9 @@ export const GamePortfolioModal: React.FC<GamePortfolioModalProps> = ({
       <div className="modal-card game-placeholder-modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <div>
-            <span className="modal-eyebrow">Right Woodland Path · {destinations.gamePortfolioLabel}</span>
+            <span className="modal-eyebrow">
+              {destinations.gamePortfolioLabel} · {destinations.gamePortfolioTheme}
+            </span>
             <h2 id="game-modal-title" className="modal-title">
               {destinations.gamePortfolioPlaceholderTitle}
             </h2>
@@ -62,7 +64,9 @@ export const GamePortfolioModal: React.FC<GamePortfolioModalProps> = ({
             rel="noopener noreferrer"
             className="action-btn action-btn-primary"
           >
-            <span>Visit {destinations.uxPortfolioLabel} ↗</span>
+            <span>
+              Explore {destinations.uxPortfolioLabel} ({destinations.uxPortfolioTheme}) ↗
+            </span>
           </a>
           <button
             type="button"
@@ -72,7 +76,7 @@ export const GamePortfolioModal: React.FC<GamePortfolioModalProps> = ({
               onOpenContact();
             }}
           >
-            <span>Open Contact Card</span>
+            <span>Open Contact Letter</span>
           </button>
         </div>
       </div>

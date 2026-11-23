@@ -84,7 +84,7 @@ class SnapshotRunner: NSObject, WKNavigationDelegate {
         await sleepMs(160)
     }
 
-    func saveSnapshot(filename: String) async {
+    func saveSnapshot(filenames: [String]) async {
         await renderAndMirrorCanvas()
         let config = WKSnapshotConfiguration()
         config.rect = webView.bounds
@@ -100,51 +100,93 @@ class SnapshotRunner: NSObject, WKNavigationDelegate {
            let tiff = image.tiffRepresentation,
            let bitmap = NSBitmapImageRep(data: tiff),
            let png = bitmap.representation(using: NSBitmapImageRep.FileType.png, properties: [:]) {
-            let outUrl = URL(fileURLWithPath: outputDir).appendingPathComponent(filename)
-            try? png.write(to: outUrl)
-            print("Saved screenshot: \(outUrl.path)")
+            for filename in filenames {
+                let outUrl = URL(fileURLWithPath: outputDir).appendingPathComponent(filename)
+                try? png.write(to: outUrl)
+                print("Saved screenshot: \(outUrl.path)")
+            }
         }
     }
 
     func runAll() async {
-        // 1. Mobile Portrait (390x844) — Initial Collectible View with 3D Nameplate
+        // 3 & 4. Mobile Portrait (390x844) — Initial & Rotated
         setupWindow(width: 390, height: 844, isMobile: true)
         await loadUrl("\(baseUrl)/?view=initial")
-        await saveSnapshot(filename: "mobile_portrait_initial.png")
+        await saveSnapshot(filenames: ["03_mobile_portrait_initial.png", "mobile_portrait_initial.png"])
 
-        // 2. Mobile Portrait (390x844) — Rotated View with Integrated 3D Nameplate
         _ = await evalJS("window.__setCrossroadsView && window.__setCrossroadsView('rotated')")
         await sleepMs(350)
-        await saveSnapshot(filename: "mobile_portrait_rotated.png")
+        await saveSnapshot(filenames: ["04_mobile_portrait_rotated.png", "mobile_portrait_rotated.png"])
 
-        // 3. Mailbox Physical-Looking Animated Letter Opened (390x844)
+        // 13. Functional: Contact Mailbox Opened (390x844)
         _ = await evalJS("window.__setCrossroadsView && window.__setCrossroadsView('initial')")
         await sleepMs(200)
         _ = await evalJS("window.__openMailboxLetter && window.__openMailboxLetter(true)")
-        await sleepMs(500)
-        await saveSnapshot(filename: "mailbox_letter_opened.png")
-        await saveSnapshot(filename: "mobile_contact_mailbox_open.png")
+        await sleepMs(450)
+        await saveSnapshot(filenames: ["13_functional_mailbox_opened.png", "mailbox_letter_opened.png"])
         _ = await evalJS("window.__openMailboxLetter && window.__openMailboxLetter(false)")
         await sleepMs(200)
 
-        // 4. Desktop Initial View (1440x900)
+        // 14. Functional: Game Trail Placeholder State (390x844)
+        _ = await evalJS("window.__openGameTrailModal && window.__openGameTrailModal(true)")
+        await sleepMs(350)
+        await saveSnapshot(filenames: ["14_functional_game_trail_modal.png"])
+        _ = await evalJS("window.__openGameTrailModal && window.__openGameTrailModal(false)")
+        await sleepMs(200)
+
+        // 15. Functional: Accessible Fallback Navigation Menu (390x844)
+        _ = await evalJS("""
+            (() => {
+                const btn = document.querySelector('.settings-menu-anchor .corner-icon-pill');
+                if (btn) btn.click();
+            })()
+        """)
+        await sleepMs(300)
+        await saveSnapshot(filenames: ["15_functional_accessible_fallback.png"])
+
+        // 1 & 2. Desktop Initial & Rotated Views (1440x900)
         setupWindow(width: 1440, height: 900, isMobile: false)
         await loadUrl("\(baseUrl)/?view=initial")
-        await saveSnapshot(filename: "desktop_initial.png")
+        await saveSnapshot(filenames: ["01_desktop_initial.png", "desktop_initial.png"])
 
-        // 5. Desktop Rotated View with Integrated 3D Nameplate (1440x900)
         _ = await evalJS("window.__setCrossroadsView && window.__setCrossroadsView('rotated')")
         await sleepMs(350)
-        await saveSnapshot(filename: "desktop_rotated.png")
+        await saveSnapshot(filenames: ["02_desktop_rotated.png", "desktop_rotated.png"])
 
-        // 6. Closer Screenshot of Bridge / Widened Creek / Mailbox Area (1200x900)
+        // Detailed Art Review Close-Ups (1200x900)
         setupWindow(width: 1200, height: 900, isMobile: false)
-        await loadUrl("\(baseUrl)/?view=closeupBridgeCreekMailbox")
-        await saveSnapshot(filename: "closeup_bridge_creek_mailbox.png")
 
-        // 7. Closer Screenshot Clearly Showing New Sign Names ('Design Path' & 'Play Path') (1200x900)
-        await loadUrl("\(baseUrl)/?view=closeupSigns")
-        await saveSnapshot(filename: "closeup_new_sign_names.png")
+        // 5. Close-up of a rebuilt broadleaf hero tree
+        await loadUrl("\(baseUrl)/?view=closeupBroadleaf")
+        await saveSnapshot(filenames: ["05_closeup_broadleaf_tree.png"])
+
+        // 6. Close-up of the rebuilt evergreen
+        await loadUrl("\(baseUrl)/?view=closeupEvergreen")
+        await saveSnapshot(filenames: ["06_closeup_evergreen_tree.png"])
+
+        // 7. Close-up of the Design Trail sign
+        await loadUrl("\(baseUrl)/?view=closeupDesignSign")
+        await saveSnapshot(filenames: ["07_closeup_design_trail_sign.png"])
+
+        // 8. Close-up of the Game Trail sign
+        await loadUrl("\(baseUrl)/?view=closeupGameSign")
+        await saveSnapshot(filenames: ["08_closeup_game_trail_sign.png"])
+
+        // 9. Close-up of the woodland trail and stepping stones
+        await loadUrl("\(baseUrl)/?view=closeupTrailStones")
+        await saveSnapshot(filenames: ["09_closeup_trail_stepping_stones.png"])
+
+        // 10. Close-up of both bridge approaches
+        await loadUrl("\(baseUrl)/?view=closeupBridgeApproaches")
+        await saveSnapshot(filenames: ["10_closeup_bridge_approaches.png"])
+
+        // 11. Close-up of the creek and water material
+        await loadUrl("\(baseUrl)/?view=closeupCreekWater")
+        await saveSnapshot(filenames: ["11_closeup_creek_water.png"])
+
+        // 12. Close-up of the Evelyn Lin identity plaque
+        await loadUrl("\(baseUrl)/?view=closeupPlaque")
+        await saveSnapshot(filenames: ["12_closeup_identity_plaque.png"])
 
         NSApplication.shared.terminate(nil)
     }

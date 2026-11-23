@@ -1,8 +1,7 @@
 import React, { useMemo, useRef, useState } from 'react';
 import { useFrame, ThreeEvent } from '@react-three/fiber';
 import * as THREE from 'three';
-import { PERSONAL_CONFIG } from '../../config/personalConfig';
-import { getSignPlaqueTexture, getWoodGrainTexture } from '../../utils/proceduralTextures';
+import { getWoodGrainTexture } from '../../utils/proceduralTextures';
 
 export type SignId = 'ux' | 'game';
 
@@ -29,14 +28,6 @@ export const WoodenSigns: React.FC<WoodenSignsProps> = ({
   const [gameHovered, setGameHovered] = useState(false);
 
   const woodBump = useMemo(() => getWoodGrainTexture(), []);
-  const uxPlaqueTex = useMemo(
-    () => getSignPlaqueTexture(PERSONAL_CONFIG.destinations.uxPortfolioLabel, 'left'),
-    []
-  );
-  const gamePlaqueTex = useMemo(
-    () => getSignPlaqueTexture(PERSONAL_CONFIG.destinations.gamePortfolioLabel, 'right'),
-    []
-  );
 
   const materials = useMemo(() => {
     return {
@@ -52,29 +43,31 @@ export const WoodenSigns: React.FC<WoodenSignsProps> = ({
         color: '#ffffff',
         vertexColors: true,
         roughness: 0.62,
-        metalness: 0.04,
+        metalness: 0.03,
         bumpMap: woodBump,
-        bumpScale: 0.016,
+        bumpScale: 0.014,
       }),
       gameBoard: new THREE.MeshStandardMaterial({
         color: '#ffffff',
         vertexColors: true,
         roughness: 0.62,
-        metalness: 0.04,
+        metalness: 0.03,
         bumpMap: woodBump,
-        bumpScale: 0.016,
+        bumpScale: 0.014,
       }),
       uxLettering: new THREE.MeshStandardMaterial({
         color: '#F5EFE2',
         emissive: '#EAD8B1',
         emissiveIntensity: 0.16,
-        roughness: 0.36,
+        roughness: 0.34,
+        metalness: 0.05,
       }),
       gameLettering: new THREE.MeshStandardMaterial({
         color: '#F5EFE2',
         emissive: '#EAD8B1',
         emissiveIntensity: 0.16,
-        roughness: 0.36,
+        roughness: 0.34,
+        metalness: 0.05,
       }),
     };
   }, [woodBump]);
@@ -91,38 +84,38 @@ export const WoodenSigns: React.FC<WoodenSignsProps> = ({
     materials.uxBoard.emissive.set(isUxActive ? '#4A2E14' : '#000000');
     materials.uxBoard.emissiveIntensity = THREE.MathUtils.lerp(
       materials.uxBoard.emissiveIntensity,
-      isUxActive ? 0.45 : 0.0,
+      isUxActive ? 0.42 : 0.0,
       delta * 8
     );
     materials.uxLettering.emissiveIntensity = THREE.MathUtils.lerp(
       materials.uxLettering.emissiveIntensity,
-      isUxActive ? 0.62 : 0.16,
+      isUxActive ? 0.58 : 0.16,
       delta * 8
     );
 
     materials.gameBoard.emissive.set(isGameActive ? '#4A2E14' : '#000000');
     materials.gameBoard.emissiveIntensity = THREE.MathUtils.lerp(
       materials.gameBoard.emissiveIntensity,
-      isGameActive ? 0.45 : 0.0,
+      isGameActive ? 0.42 : 0.0,
       delta * 8
     );
     materials.gameLettering.emissiveIntensity = THREE.MathUtils.lerp(
       materials.gameLettering.emissiveIntensity,
-      isGameActive ? 0.62 : 0.16,
+      isGameActive ? 0.58 : 0.16,
       delta * 8
     );
 
     if (uxGroupRef.current) {
       uxGroupRef.current.position.y = THREE.MathUtils.lerp(
         uxGroupRef.current.position.y,
-        isUxActive ? 0.035 : 0.0,
+        isUxActive ? 0.032 : 0.0,
         delta * 9
       );
     }
     if (gameGroupRef.current) {
       gameGroupRef.current.position.y = THREE.MathUtils.lerp(
         gameGroupRef.current.position.y,
-        isGameActive ? 0.035 : 0.0,
+        isGameActive ? 0.032 : 0.0,
         delta * 9
       );
     }
@@ -154,7 +147,7 @@ export const WoodenSigns: React.FC<WoodenSignsProps> = ({
 
   return (
     <group name="InteractiveWoodenSigns">
-      {/* 1. UX PORTFOLIO SIGNPOST (Left Crossroads Branch) */}
+      {/* 1. DESIGN TRAIL SIGNPOST (Left Crossroads Trail -> https://evelynjlin.com) */}
       <group ref={uxGroupRef} name="Signpost_UX_Interactive">
         {uxPostGeo && (
           <mesh
@@ -180,17 +173,8 @@ export const WoodenSigns: React.FC<WoodenSignsProps> = ({
           />
         )}
 
-        {/* Flush back-side plaque so label stays readable if orbited from behind */}
-        <mesh
-          position={[-1.58, 1.42, -0.62]}
-          rotation={[0, Math.PI + THREE.MathUtils.degToRad(18), 0]}
-        >
-          <planeGeometry args={[1.38, 0.38]} />
-          <meshStandardMaterial map={uxPlaqueTex} roughness={0.55} />
-        </mesh>
-
         {(uxHovered || activeHover === 'ux') && (
-          <mesh position={[-1.58, 0.28, -0.62]} rotation={[-Math.PI / 2, 0, 0]}>
+          <mesh position={[-1.58, 0.28, -0.68]} rotation={[-Math.PI / 2, 0, 0]}>
             <ringGeometry args={[0.3, 0.43, 32]} />
             <meshBasicMaterial color="#DCC99D" transparent opacity={0.62} side={THREE.DoubleSide} />
           </mesh>
@@ -198,7 +182,7 @@ export const WoodenSigns: React.FC<WoodenSignsProps> = ({
 
         <mesh
           name="Hitbox_Sign_UX"
-          position={[-1.58, 1.3, -0.56]}
+          position={[-1.58, 1.3, -0.62]}
           rotation={[0, THREE.MathUtils.degToRad(18), 0]}
           onPointerDown={handlePointerDown}
           onClick={(e) => handleSignClick(e, 'ux')}
@@ -219,7 +203,7 @@ export const WoodenSigns: React.FC<WoodenSignsProps> = ({
         </mesh>
       </group>
 
-      {/* 2. GAME PORTFOLIO SIGNPOST (Right Crossroads Branch) */}
+      {/* 2. GAME TRAIL SIGNPOST (Right Crossroads Trail -> Game Worlds) */}
       <group ref={gameGroupRef} name="Signpost_Game_Interactive">
         {gamePostGeo && (
           <mesh
@@ -245,16 +229,8 @@ export const WoodenSigns: React.FC<WoodenSignsProps> = ({
           />
         )}
 
-        <mesh
-          position={[1.58, 1.4, -0.58]}
-          rotation={[0, Math.PI - THREE.MathUtils.degToRad(18), 0]}
-        >
-          <planeGeometry args={[1.38, 0.38]} />
-          <meshStandardMaterial map={gamePlaqueTex} roughness={0.55} />
-        </mesh>
-
         {(gameHovered || activeHover === 'game') && (
-          <mesh position={[1.58, 0.27, -0.58]} rotation={[-Math.PI / 2, 0, 0]}>
+          <mesh position={[1.58, 0.27, -0.64]} rotation={[-Math.PI / 2, 0, 0]}>
             <ringGeometry args={[0.3, 0.43, 32]} />
             <meshBasicMaterial color="#DCC99D" transparent opacity={0.62} side={THREE.DoubleSide} />
           </mesh>
@@ -262,7 +238,7 @@ export const WoodenSigns: React.FC<WoodenSignsProps> = ({
 
         <mesh
           name="Hitbox_Sign_Game"
-          position={[1.58, 1.28, -0.52]}
+          position={[1.58, 1.28, -0.58]}
           rotation={[0, THREE.MathUtils.degToRad(-18), 0]}
           onPointerDown={handlePointerDown}
           onClick={(e) => handleSignClick(e, 'game')}
