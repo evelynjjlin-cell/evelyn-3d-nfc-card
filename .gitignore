@@ -4,4 +4,7 @@ dist-ssr
 *.local
 .DS_Store
 .vercel
+*.blend1
+tsconfig.tsbuildinfo
 screenshots/*.tmp.png
+

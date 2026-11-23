@@ -19,6 +19,7 @@ declare global {
   interface Window {
     __setCrossroadsView?: (preset: CameraViewPreset['id']) => void;
     __crossroadsSceneReady?: boolean;
+    __r3fRenderNow?: () => string;
   }
 }
 
@@ -143,10 +144,10 @@ export const App: React.FC = () => {
             shadows={activeQualityPreset.shadows}
             dpr={activeQualityPreset.dpr}
             camera={{
-              fov: 38,
+              fov: 40,
               near: 0.2,
-              far: 60,
-              position: [0, 6.8, 12.8],
+              far: 65,
+              position: [0, 7.8, 16.5],
             }}
             gl={{
               antialias: true,
@@ -156,8 +157,18 @@ export const App: React.FC = () => {
               toneMapping: THREE.ACESFilmicToneMapping,
               toneMappingExposure: 1.08,
             }}
-            onCreated={({ gl }) => {
+            onCreated={({ gl, scene, camera, advance }) => {
               gl.setClearColor('#132922', 1);
+              window.__r3fRenderNow = () => {
+                for (let i = 0; i < 30; i++) {
+                  advance(performance.now() + i * 16);
+                }
+                gl.render(scene, camera);
+                return JSON.stringify({
+                  children: scene.children.length,
+                  camPos: camera.position.toArray().map((n) => Number(n.toFixed(2))),
+                });
+              };
             }}
           >
             <Suspense fallback={null}>

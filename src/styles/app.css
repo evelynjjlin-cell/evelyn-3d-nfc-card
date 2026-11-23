@@ -243,7 +243,8 @@ body,
   color: var(--ivory-warm);
   text-decoration: none;
   border-radius: 11px;
-  padding: 7px 6px;
+  padding: 7px 4px;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -274,16 +275,16 @@ body,
 }
 
 .dock-kicker {
-  font-size: 0.56rem;
+  font-size: 0.52rem;
   font-weight: 600;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--champagne-soft);
   margin-bottom: 2px;
 }
 
 .dock-label {
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 600;
   color: var(--ivory-warm);
   white-space: nowrap;

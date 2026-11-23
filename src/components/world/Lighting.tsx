@@ -51,7 +51,7 @@ export const Lighting: React.FC<LightingProps> = ({ quality }) => {
   return (
     <group name="CrossroadsLighting">
       {/* Soft atmospheric depth fog matching deep forest background */}
-      <fog attach="fog" args={['#132922', 17.5, 32]} />
+      <fog attach="fog" args={['#132922', 24.5, 42]} />
 
       {/* Gentle ambient base */}
       <ambientLight intensity={0.62} color="#E8F0E6" />
