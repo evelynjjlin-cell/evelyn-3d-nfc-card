@@ -20,7 +20,9 @@ export type CameraPresetId =
   | 'gameSign'
   | 'mailbox'
   | 'closeupTrees'
-  | 'closeupProps';
+  | 'closeupProps'
+  | 'closeupBridgeCreekMailbox'
+  | 'closeupSigns';
 
 export interface CameraViewPreset {
   id: CameraPresetId;
@@ -50,8 +52,8 @@ export interface PersonalConfig {
     gamePortfolioLabel: string;
     /**
      * Leave empty ("") while the Game Portfolio is still in development.
-     * When empty, selecting the Game Portfolio sign opens the "New world in progress." notice.
-     * Once set to a valid https:// URL, the sign navigates directly like the UX Portfolio sign.
+     * When empty, selecting the Play Path sign opens the "New world in progress." notice.
+     * Once set to a valid https:// URL, the sign navigates directly like the Design Path sign.
      */
     gamePortfolioUrl: string;
     gamePortfolioPlaceholderTitle: string;
@@ -89,13 +91,13 @@ export const PERSONAL_CONFIG: PersonalConfig = {
     projectSubtitle: 'The Crossroads',
   },
   destinations: {
-    uxPortfolioLabel: 'UX Portfolio',
+    uxPortfolioLabel: 'Design Path',
     uxPortfolioUrl: 'https://evelynjlin.com',
-    gamePortfolioLabel: 'Game Portfolio',
+    gamePortfolioLabel: 'Play Path',
     gamePortfolioUrl: '',
     gamePortfolioPlaceholderTitle: 'New world in progress.',
     gamePortfolioPlaceholderMessage:
-      'Evelyn’s dedicated Game UX & Game-Inspired Design portfolio is currently being crafted. In the meantime, explore her UX & Interactive Experience work or save her contact card below.',
+      'Evelyn’s dedicated Game UX & Game-Inspired Design portfolio is currently being crafted. In the meantime, explore her Design Path portfolio or save her contact card below.',
   },
   contact: {
     email: '',
@@ -127,7 +129,7 @@ export const PERSONAL_CONFIG: PersonalConfig = {
       shadows: true,
       shadowMapSize: 2048,
       vegetationMultiplier: 1.0,
-      particlesCount: 22,
+      particlesCount: 18,
       enableWindAnimation: true,
       enableWaterShader: true,
     },
@@ -139,7 +141,7 @@ export const PERSONAL_CONFIG: PersonalConfig = {
       shadows: true,
       shadowMapSize: 1024,
       vegetationMultiplier: 0.8,
-      particlesCount: 16,
+      particlesCount: 14,
       enableWindAnimation: true,
       enableWaterShader: true,
     },
@@ -151,7 +153,7 @@ export const PERSONAL_CONFIG: PersonalConfig = {
       shadows: false,
       shadowMapSize: 512,
       vegetationMultiplier: 0.45,
-      particlesCount: 8,
+      particlesCount: 6,
       enableWindAnimation: false,
       enableWaterShader: false,
     },
@@ -159,38 +161,38 @@ export const PERSONAL_CONFIG: PersonalConfig = {
   cameraPresets: {
     initial: {
       id: 'initial',
-      label: 'Crossroads View',
-      azimuth: -0.05,
-      polar: 1.03,
-      distanceMobile: 18.4,
-      distanceDesktop: 13.5,
-      target: [0, 0.62, 0.05],
+      label: 'Collectible Front View',
+      azimuth: -0.04,
+      polar: 1.04,
+      distanceMobile: 17.8,
+      distanceDesktop: 12.2,
+      target: [0, 0.32, 0.22],
     },
     rotated: {
       id: 'rotated',
       label: 'Rotated Angle',
-      azimuth: 0.38,
-      polar: 0.99,
-      distanceMobile: 18.8,
-      distanceDesktop: 13.7,
-      target: [-0.06, 0.62, 0.04],
+      azimuth: 0.36,
+      polar: 1.01,
+      distanceMobile: 18.2,
+      distanceDesktop: 12.5,
+      target: [-0.04, 0.32, 0.20],
     },
     uxSign: {
       id: 'uxSign',
-      label: 'UX Portfolio Path',
+      label: 'Design Path',
       azimuth: -0.26,
       polar: 1.04,
-      distanceMobile: 15.6,
-      distanceDesktop: 9.8,
+      distanceMobile: 15.2,
+      distanceDesktop: 9.6,
       target: [-1.15, 0.65, -0.35],
     },
     gameSign: {
       id: 'gameSign',
-      label: 'Game Portfolio Path',
+      label: 'Play Path',
       azimuth: 0.26,
       polar: 1.04,
-      distanceMobile: 15.6,
-      distanceDesktop: 9.8,
+      distanceMobile: 15.2,
+      distanceDesktop: 9.6,
       target: [1.15, 0.65, -0.35],
     },
     mailbox: {
@@ -198,8 +200,8 @@ export const PERSONAL_CONFIG: PersonalConfig = {
       label: 'Woodland Mailbox',
       azimuth: 0.22,
       polar: 1.05,
-      distanceMobile: 14.8,
-      distanceDesktop: 9.4,
+      distanceMobile: 14.4,
+      distanceDesktop: 9.2,
       target: [0.65, 0.55, 0.95],
     },
     closeupTrees: {
@@ -213,12 +215,30 @@ export const PERSONAL_CONFIG: PersonalConfig = {
     },
     closeupProps: {
       id: 'closeupProps',
-      label: 'Signs & Mailbox Close-up',
-      azimuth: 0.22,
+      label: 'Bridge, Creek & Mailbox Close-up',
+      azimuth: 0.20,
+      polar: 1.03,
+      distanceMobile: 8.4,
+      distanceDesktop: 6.2,
+      target: [0.32, 0.62, 0.42],
+    },
+    closeupBridgeCreekMailbox: {
+      id: 'closeupBridgeCreekMailbox',
+      label: 'Bridge, Creek & Mailbox Close-up',
+      azimuth: 0.20,
+      polar: 1.02,
+      distanceMobile: 8.2,
+      distanceDesktop: 6.1,
+      target: [0.28, 0.55, 0.45],
+    },
+    closeupSigns: {
+      id: 'closeupSigns',
+      label: 'Design Path & Play Path Signs Close-up',
+      azimuth: -0.02,
       polar: 1.06,
-      distanceMobile: 8.8,
-      distanceDesktop: 6.4,
-      target: [0.35, 0.78, 0.25],
+      distanceMobile: 9.2,
+      distanceDesktop: 6.9,
+      target: [0.0, 0.96, -0.38],
     },
   },
 };

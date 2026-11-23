@@ -62,7 +62,7 @@ class SnapshotRunner: NSObject, WKNavigationDelegate {
                 break
             }
         }
-        await sleepMs(900)
+        await sleepMs(950)
     }
 
     func renderAndMirrorCanvas() async {
@@ -107,60 +107,44 @@ class SnapshotRunner: NSObject, WKNavigationDelegate {
     }
 
     func runAll() async {
-        // 1. Mobile Portrait (390x844) — Initial Camera
+        // 1. Mobile Portrait (390x844) — Initial Collectible View with 3D Nameplate
         setupWindow(width: 390, height: 844, isMobile: true)
         await loadUrl("\(baseUrl)/?view=initial")
         await saveSnapshot(filename: "mobile_portrait_initial.png")
 
-        // 2. Mobile Portrait (390x844) — Rotated Camera
+        // 2. Mobile Portrait (390x844) — Rotated View with Integrated 3D Nameplate
         _ = await evalJS("window.__setCrossroadsView && window.__setCrossroadsView('rotated')")
         await sleepMs(350)
         await saveSnapshot(filename: "mobile_portrait_rotated.png")
 
-        // 3. Functional Verification — Game Portfolio Modal & Contact Panel
+        // 3. Mailbox Physical-Looking Animated Letter Opened (390x844)
         _ = await evalJS("window.__setCrossroadsView && window.__setCrossroadsView('initial')")
         await sleepMs(200)
-        _ = await evalJS("""
-            (() => {
-                const btns = Array.from(document.querySelectorAll('.compact-nav-pill .nav-link-item'));
-                const gameBtn = btns.find(b => b.textContent.includes('Game Portfolio'));
-                if (gameBtn) gameBtn.click();
-            })()
-        """)
-        await sleepMs(350)
-        await saveSnapshot(filename: "mobile_game_portfolio_modal.png")
-
-        _ = await evalJS("""
-            (() => {
-                const closeBtn = document.querySelector('.modal-close-btn');
-                if (closeBtn) closeBtn.click();
-                const btns = Array.from(document.querySelectorAll('.compact-nav-pill .nav-link-item'));
-                const contactBtn = btns.find(b => b.textContent.includes('Save Contact'));
-                if (contactBtn) contactBtn.click();
-            })()
-        """)
-        await sleepMs(600)
+        _ = await evalJS("window.__openMailboxLetter && window.__openMailboxLetter(true)")
+        await sleepMs(500)
+        await saveSnapshot(filename: "mailbox_letter_opened.png")
         await saveSnapshot(filename: "mobile_contact_mailbox_open.png")
+        _ = await evalJS("window.__openMailboxLetter && window.__openMailboxLetter(false)")
+        await sleepMs(200)
 
-        // 4. Desktop Initial Camera (1440x900)
+        // 4. Desktop Initial View (1440x900)
         setupWindow(width: 1440, height: 900, isMobile: false)
         await loadUrl("\(baseUrl)/?view=initial")
         await saveSnapshot(filename: "desktop_initial.png")
-        await saveSnapshot(filename: "desktop_crossroads.png")
 
-        // 5. Desktop Rotated Camera (1440x900)
+        // 5. Desktop Rotated View with Integrated 3D Nameplate (1440x900)
         _ = await evalJS("window.__setCrossroadsView && window.__setCrossroadsView('rotated')")
         await sleepMs(350)
         await saveSnapshot(filename: "desktop_rotated.png")
 
-        // 6. Close-up showing tree and foliage quality (1200x900)
+        // 6. Closer Screenshot of Bridge / Widened Creek / Mailbox Area (1200x900)
         setupWindow(width: 1200, height: 900, isMobile: false)
-        await loadUrl("\(baseUrl)/?view=closeupTrees")
-        await saveSnapshot(filename: "closeup_trees_foliage.png")
+        await loadUrl("\(baseUrl)/?view=closeupBridgeCreekMailbox")
+        await saveSnapshot(filename: "closeup_bridge_creek_mailbox.png")
 
-        // 7. Close-up showing wooden sign and mailbox quality (1200x900)
-        await loadUrl("\(baseUrl)/?view=closeupProps")
-        await saveSnapshot(filename: "closeup_signs_mailbox.png")
+        // 7. Closer Screenshot Clearly Showing New Sign Names ('Design Path' & 'Play Path') (1200x900)
+        await loadUrl("\(baseUrl)/?view=closeupSigns")
+        await saveSnapshot(filename: "closeup_new_sign_names.png")
 
         NSApplication.shared.terminate(nil)
     }

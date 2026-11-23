@@ -78,127 +78,135 @@ export const ContactPanel: React.FC<ContactPanelProps> = ({
       aria-labelledby="contact-panel-title"
       onClick={onClose}
     >
-      <div className="modal-card contact-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
-          <div>
-            <span className="modal-eyebrow">Woodland Mailbox · Digital Business Card</span>
-            <h2 id="contact-panel-title" className="modal-title">
+      {/* Physical-Looking Unfolded Cream-Parchment Woodland Letter */}
+      <article className="parchment-letter-card" onClick={(e) => e.stopPropagation()}>
+        <div className="letter-inner-border">
+          {/* Top Wax Seal Emblem & Close Button */}
+          <div className="letter-top-bar">
+            <div className="wax-seal-badge" aria-hidden="true">
+              <span>EL</span>
+            </div>
+            <span className="letter-postmark">THE CROSSROADS · WOODLAND POST</span>
+            <button
+              type="button"
+              className="letter-close-btn"
+              onClick={onClose}
+              aria-label="Fold and close letter"
+              title="Close letter"
+            >
+              ✕
+            </button>
+          </div>
+
+          {/* Letter Salutation & Identity */}
+          <header className="letter-identity">
+            <h2 id="contact-panel-title" className="letter-name">
               {identity.displayName}
             </h2>
-            <p className="modal-subtitle">{identity.professionalTitle}</p>
-          </div>
-          <button
-            type="button"
-            className="modal-close-btn"
-            onClick={onClose}
-            aria-label="Close contact panel"
-          >
-            ✕
-          </button>
-        </div>
+            <p className="letter-role">{identity.professionalTitle}</p>
+            <p className="letter-quote">“{identity.tagline}”</p>
+          </header>
 
-        <p className="contact-tagline">“{identity.tagline}”</p>
+          <hr className="letter-fold-crease" aria-hidden="true" />
 
-        {/* Primary Contact & Portfolio Actions */}
-        <div className="contact-actions-grid">
-          <button
-            type="button"
-            className="action-btn action-btn-primary"
-            onClick={handleSaveVCard}
-          >
-            <span className="btn-icon" aria-hidden="true">↓</span>
-            <span>Save Contact (.vcf)</span>
-          </button>
+          {/* Contact & Portfolio Actions */}
+          <div className="letter-actions-grid">
+            <button
+              type="button"
+              className="letter-btn letter-btn-primary"
+              onClick={handleSaveVCard}
+            >
+              <span aria-hidden="true">↓</span>
+              <span>Save Contact (.vcf)</span>
+            </button>
 
-          <a
-            href={destinations.uxPortfolioUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="action-btn action-btn-secondary"
-          >
-            <span className="btn-icon" aria-hidden="true">↗</span>
-            <span>{destinations.uxPortfolioLabel}</span>
-          </a>
-
-          {destinations.gamePortfolioUrl.trim() && (
             <a
-              href={destinations.gamePortfolioUrl.trim()}
+              href={destinations.uxPortfolioUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="action-btn action-btn-secondary"
+              className="letter-btn letter-btn-secondary"
             >
-              <span className="btn-icon" aria-hidden="true">↗</span>
-              <span>{destinations.gamePortfolioLabel}</span>
+              <span>{destinations.uxPortfolioLabel}</span>
+              <span aria-hidden="true">↗</span>
             </a>
-          )}
 
-          {contact.email.trim() && (
-            <a
-              href={`mailto:${contact.email.trim()}`}
-              className="action-btn action-btn-secondary"
+            {destinations.gamePortfolioUrl.trim() && (
+              <a
+                href={destinations.gamePortfolioUrl.trim()}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="letter-btn letter-btn-secondary"
+              >
+                <span>{destinations.gamePortfolioLabel}</span>
+                <span aria-hidden="true">↗</span>
+              </a>
+            )}
+
+            {contact.email.trim() && (
+              <a
+                href={`mailto:${contact.email.trim()}`}
+                className="letter-btn letter-btn-secondary"
+              >
+                <span>{contact.email.trim()}</span>
+              </a>
+            )}
+
+            {contact.linkedInUrl.trim() && (
+              <a
+                href={contact.linkedInUrl.trim()}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="letter-btn letter-btn-secondary"
+              >
+                <span>LinkedIn</span>
+              </a>
+            )}
+
+            <button
+              type="button"
+              className="letter-btn letter-btn-outline"
+              onClick={handleShare}
             >
-              <span className="btn-icon" aria-hidden="true">✉</span>
-              <span>{contact.email.trim()}</span>
-            </a>
-          )}
+              <span>Share Card</span>
+            </button>
 
-          {contact.linkedInUrl.trim() && (
-            <a
-              href={contact.linkedInUrl.trim()}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="action-btn action-btn-secondary"
+            <button
+              type="button"
+              className="letter-btn letter-btn-outline"
+              onClick={handleCopy}
             >
-              <span className="btn-icon" aria-hidden="true">in</span>
-              <span>LinkedIn Profile</span>
-            </a>
-          )}
-
-          <button
-            type="button"
-            className="action-btn action-btn-outline"
-            onClick={handleShare}
-          >
-            <span className="btn-icon" aria-hidden="true">⌲</span>
-            <span>Share Card</span>
-          </button>
-
-          <button
-            type="button"
-            className="action-btn action-btn-outline"
-            onClick={handleCopy}
-          >
-            <span className="btn-icon" aria-hidden="true">⧉</span>
-            <span>Copy Link</span>
-          </button>
-        </div>
-
-        {localFeedback && (
-          <div className="inline-feedback" role="status">
-            {localFeedback}
+              <span>Copy Link</span>
+            </button>
           </div>
-        )}
 
-        {/* NFC & QR Code Section */}
-        <div className="qr-section">
-          {qrDataUrl && (
-            <img
-              src={qrDataUrl}
-              alt={`QR Code for ${identity.displayName}`}
-              className="qr-image"
-              width={116}
-              height={116}
-            />
+          {localFeedback && (
+            <div className="letter-feedback" role="status">
+              {localFeedback}
+            </div>
           )}
-          <div className="qr-meta">
-            <span className="qr-title">One Card, One Destination</span>
-            <p className="qr-desc">
-              Scan this QR code or tap the physical NFC card to open The Crossroads directly on any smartphone.
-            </p>
-            <span className="qr-url-note">{resolvedCard.statusNote}</span>
-          </div>
+
+          {/* Postage Stamp QR Footer */}
+          <footer className="letter-qr-footer">
+            {qrDataUrl && (
+              <div className="stamp-frame">
+                <img
+                  src={qrDataUrl}
+                  alt={`QR Code for ${identity.displayName}`}
+                  className="letter-qr-img"
+                  width={96}
+                  height={96}
+                />
+              </div>
+            )}
+            <div className="letter-qr-copy">
+              <span className="letter-qr-heading">Tap or Scan to Keep</span>
+              <p className="letter-qr-text">
+                Point any smartphone camera at this stamp or tap the NFC card to revisit Evelyn’s forest crossroads.
+              </p>
+            </div>
+          </footer>
         </div>
-      </div>
+      </article>
     </div>
   );
 };

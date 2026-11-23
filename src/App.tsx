@@ -18,6 +18,7 @@ import { downloadVCard } from './utils/nfcAndVcard';
 declare global {
   interface Window {
     __setCrossroadsView?: (preset: CameraViewPreset['id']) => void;
+    __openMailboxLetter?: (open: boolean) => void;
     __crossroadsSceneReady?: boolean;
     __r3fRenderNow?: () => string;
   }
@@ -47,7 +48,9 @@ function getInitialPresetFromUrl(): CameraViewPreset['id'] {
     view === 'gameSign' ||
     view === 'mailbox' ||
     view === 'closeupTrees' ||
-    view === 'closeupProps'
+    view === 'closeupProps' ||
+    view === 'closeupBridgeCreekMailbox' ||
+    view === 'closeupSigns'
   ) {
     return view;
   }
@@ -77,8 +80,13 @@ export const App: React.FC = () => {
     window.__setCrossroadsView = (preset: CameraViewPreset['id']) => {
       setCameraPreset(preset);
     };
+    window.__openMailboxLetter = (open: boolean) => {
+      setIsMailboxOpen(open);
+      setIsContactPanelOpen(open);
+    };
     return () => {
       delete window.__setCrossroadsView;
+      delete window.__openMailboxLetter;
     };
   }, []);
 
@@ -139,9 +147,9 @@ export const App: React.FC = () => {
 
   return (
     <main className="app-viewport">
-      {/* Real-Time 3D Forest Diorama Canvas */}
+      {/* Real-Time 3D Forest Collectible Canvas */}
       {webGLSupported ? (
-        <div className="canvas-wrapper" aria-label="Interactive 3D Forest Crossroads">
+        <div className="canvas-wrapper" aria-label="Interactive 3D Forest Crossroads Collectible">
           <Canvas
             shadows={activeQualityPreset.shadows}
             dpr={activeQualityPreset.dpr}
@@ -202,7 +210,7 @@ export const App: React.FC = () => {
         />
       )}
 
-      {/* Personal Identity & Accessible Navigation Overlay */}
+      {/* Minimal Collectible Controls & Screen-Reader Accessible Identity Equivalent */}
       <IdentityOverlay
         activeQuality={qualityLevel}
         onChangeQuality={setQualityLevel}
@@ -216,14 +224,14 @@ export const App: React.FC = () => {
         toastMessage={toastMessage}
       />
 
-      {/* Contact Panel (Woodland Mailbox Modal) */}
+      {/* Physical-Looking Animated Woodland Contact Letter */}
       <ContactPanel
         isOpen={isContactPanelOpen}
         onClose={handleCloseContactPanel}
         onStatusToast={showToast}
       />
 
-      {/* Game Portfolio Placeholder Modal ("New world in progress.") */}
+      {/* Play Path Placeholder Modal ("New world in progress.") */}
       <GamePortfolioModal
         isOpen={isGameModalOpen}
         onClose={() => setIsGameModalOpen(false)}

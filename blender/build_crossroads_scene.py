@@ -1,20 +1,18 @@
 """
-Blender 5.0 High-Fidelity Stylized Environment Authoring Script (V2 Art Direction Overhaul)
+Blender 5.0 High-Fidelity Stylized Environment Authoring Script
+(V3 Object-First Identity Transformation + Creek, Front Terrain, Vegetation & Signpost Refinement)
 Project: The Crossroads — Two Paths, One Designer (Evelyn Lin)
 
-Major V2 Art Upgrades:
-1. Three distinct sculpted tree archetypes (Ancient Gnarled Oak, Slender Stream Birch, Layered Woodland Cedar)
-   with root-flared grooved trunks, visible secondary branches, and 20-32 smaller varied organic foliage clusters
-   with baked 3D vertex-color sunlight & ambient occlusion gradients (no stacked geometric sphere tiers).
-2. Asymmetric, multi-elevation sculpted floating island with craggy rock buttresses, irregular overhanging turf,
-   protruding rock outcrops, and hanging roots (eliminating the flat layered-cake appearance).
-3. Sculpted shallow creek channel with varied width, pebble riverbed, submerged stones, and mossy banks.
-4. Stone-and-timber bridge abutments physically integrating the arched oak bridge into the branching pathways.
-5. Artisanal wooden signposts with iron joinery straps, recessed plaque frames, and refined wayfinding lettering.
-6. Hero-prop woodland mailbox on a dedicated cobblestone alcove with corbel brace, riveted hood, handle, hinge,
-   emerging wax-sealed letter, and signal flag.
-7. Diverse botanical ground cover: multi-blade 3D grass clumps, asymmetric fern fronds, moss cushions, and
-   stemmed petal wildflowers.
+V3 Upgrades:
+1. Embedded 3D Personal Identity Plaque ('Evelyn Lin' / 'UX & Interactive Experience Designer')
+   physically sculpted into the front cliff mantle of the floating island.
+2. Widened, more prominent shallow woodland creek with sculpted pebble riverbed (Stream_Bed),
+   clearer sculpted banks, enlarged bridge water pool, and natural flow detail.
+3. Front terrain & island lip cleanup: smooth rim attenuation, rolling foreground knolls,
+   integrated stone outcrops, and seamless pathway-to-terrain blending.
+4. Purposefully clustered ground vegetation (varied-scale 3D grass clumps, ferns, moss cushions,
+   and wildflowers anchored around boulders, creek banks, and posts).
+5. Renamed 3D wooden signposts: 'Design Path' (Left) and 'Play Path' (Right).
 """
 
 import bpy
@@ -74,7 +72,7 @@ def make_pbr_material(name, hex_color, roughness=0.72, metallic=0.0, use_vertex_
         bsdf.inputs["Roughness"].default_value = roughness
         bsdf.inputs["Metallic"].default_value = metallic
         if "Specular IOR Level" in bsdf.inputs:
-            bsdf.inputs["Specular IOR Level"].default_value = 0.28
+            bsdf.inputs["Specular IOR Level"].default_value = 0.30
         if use_vertex_color:
             vc_node = nodes.new(type="ShaderNodeVertexColor")
             vc_node.layer_name = "Col"
@@ -111,7 +109,6 @@ def finalize_mesh_object(name, bm, material, color_fn=None, remesh_voxel=None):
         bpy.ops.object.modifier_apply(modifier=mod_dec.name)
 
         mesh = obj.data
-        # Subtle organic surface leaf-tuft displacement after fusion
         for v in mesh.vertices:
             n_leaf = noise.noise(Vector((v.co.x * 3.6, v.co.y * 3.6, v.co.z * 3.6)))
             v.co += v.normal * (0.022 * n_leaf)
@@ -153,51 +150,58 @@ def add_beveled_box(bm, transform_fn, bevel_offset=0.010, segments=2):
 
 
 # ==============================================================================
-# SPATIAL & TERRAIN FUNCTIONS (Asymmetric Landform with Creek Valley & Ridges)
+# SPATIAL & TERRAIN FUNCTIONS (Refined Front Contour + Widened Woodland Creek)
 # ==============================================================================
 
 def island_rim_point(angle):
-    """Asymmetric organic island silhouette with rocky headlands and creek coves."""
+    """
+    Smooth asymmetric organic island silhouette with a refined, intentional front contour
+    that cradles the front-center 3D identity plaque and prevents any rim pinching.
+    """
     rx_base = (
-        4.35
-        + 0.28 * math.cos(angle * 2.0 - 0.3)
-        + 0.19 * math.sin(angle * 3.0 - 0.5)
-        - 0.14 * math.cos(angle * 4.0 + 0.7)
-        + 0.08 * math.sin(angle * 5.0)
+        4.38
+        + 0.24 * math.cos(angle * 2.0 - 0.25)
+        + 0.14 * math.sin(angle * 3.0 - 0.4)
+        - 0.08 * math.cos(angle * 4.0 + 0.5)
     )
     rz_base = (
-        3.32
-        + 0.24 * math.sin(angle * 2.0 + 0.4)
-        - 0.16 * math.cos(angle * 3.0)
-        + 0.11 * math.sin(angle * 4.0 - 0.8)
+        3.36
+        + 0.20 * math.sin(angle * 2.0 + 0.35)
+        - 0.12 * math.cos(angle * 3.0)
+        + 0.07 * math.sin(angle * 4.0 - 0.6)
     )
-    x = math.cos(angle) * rx_base - 0.12
-    z = math.sin(angle) * rz_base - 0.14 * math.cos(angle)
+    x = math.cos(angle) * rx_base - 0.08
+    z = math.sin(angle) * rz_base - 0.10 * math.cos(angle)
     return x, z
 
 
 def island_radial_factor(x, z):
-    ang = math.atan2(z + 0.08, x + 0.12)
+    ang = math.atan2(z + 0.06, x + 0.08)
     rim_x, rim_z = island_rim_point(ang)
-    rim_r = math.hypot(rim_x + 0.12, rim_z + 0.08)
-    cur_r = math.hypot(x + 0.12, z + 0.08)
+    rim_r = math.hypot(rim_x + 0.08, rim_z + 0.06)
+    cur_r = math.hypot(x + 0.08, z + 0.06)
     return cur_r / max(1e-4, rim_r)
 
 
 def stream_center_z(x):
-    """Natural S-bend shallow creek centerline Z as a function of X."""
-    return 0.26 + 0.17 * x + 0.32 * math.sin(x * 0.68 - 0.15) + 0.07 * math.cos(x * 1.45)
+    """
+    Graceful, continuous S-curve woodland creek centerline Z as a function of X.
+    """
+    return 0.22 + 0.16 * x + 0.34 * math.sin(x * 0.64 - 0.12) + 0.06 * math.cos(x * 1.35)
 
 
 def stream_half_width(x):
-    """Varied creek width: wider near spring pool, narrower under bridge, wider in east riffle."""
-    bridge_pinch = 1.0 - 0.28 * math.exp(-(x ** 2) / 0.55)
-    pool_swell = 1.0 + 0.32 * math.exp(-((x + 2.1) ** 2) / 0.9) + 0.22 * math.exp(-((x - 1.9) ** 2) / 1.1)
-    return 0.34 * bridge_pinch * pool_swell
+    """
+    Noticeably wider, legible woodland creek:
+    - Generous pool around and under the bridge (half-width ~0.68 -> total width ~1.36 units)
+    - Broad spring basin on the northwest (-2.0) and clear riffle pool on the southeast (+1.6)
+    """
+    bridge_pool = 1.0 + 0.24 * math.exp(-(x ** 2) / 1.15)
+    spring_swell = 1.0 + 0.22 * math.exp(-((x + 1.95) ** 2) / 1.1) + 0.20 * math.exp(-((x - 1.65) ** 2) / 1.1)
+    return 0.56 * bridge_pool * spring_swell
 
 
 def path_distance_and_branch(x, z):
-    """Returns (min_distance_to_path, branch_elevation_bias)."""
     def seg_dist(px, pz, ax, az, bx, bz):
         vx, vz = bx - ax, bz - az
         wx, wz = px - ax, pz - az
@@ -211,67 +215,71 @@ def path_distance_and_branch(x, z):
         pbx, pbz = ax + b * vx, az + b * vz
         return math.hypot(px - pbx, pz - pbz)
 
-    # Continuous path from south entry (0.0, 2.38) across bridge (0.0, 0.26) to fork (0.0, -0.22)
-    d_main = seg_dist(x, z, 0.0, 2.38, 0.0, -0.22)
-    # Left branch climbing northwest toward UX Portfolio sign
-    d_left = seg_dist(x, z, 0.0, -0.22, -2.55, -1.58)
-    # Right branch curving northeast toward Game Portfolio sign
-    d_right = seg_dist(x, z, 0.0, -0.22, 2.55, -1.50)
+    d_main = seg_dist(x, z, 0.0, 2.52, 0.0, -0.26)
+    d_left = seg_dist(x, z, 0.0, -0.26, -2.55, -1.58)
+    d_right = seg_dist(x, z, 0.0, -0.26, 2.55, -1.50)
     return min(d_main, d_left, d_right)
 
 
 def get_terrain_height(x, z):
     """
-    Multi-elevation sculpted landscape heightmap:
-    - Raised asymmetric knolls on NW (-2.4, -2.0) and NE (+2.4, -1.9)
-    - Gently elevated central crossroads clearing north of the creek
-    - Sculpted creek channel with natural bank shoulders
-    - Integrated earth abutments on both ends of the wooden bridge
+    Refined V3 multi-elevation sculpted landscape heightmap:
+    - Elevated NW and NE background forest hills
+    - Intentional foreground relief (front-left mossy knoll, front-right mailbox terrace)
+      so the foreground never feels flat or empty
+    - Deeply carved, well-defined creek channel with smooth rim attenuation so the island edge
+      never collapses or pinches where the stream exits
+    - Sculpted bridge abutment mounds on both banks
     """
     rf = island_radial_factor(x, z)
 
-    # Asymmetric hills & knolls
-    nw_hill = 0.52 * math.exp(-((x + 2.45) ** 2 / 3.2 + (z + 1.95) ** 2 / 2.6))
-    ne_hill = 0.44 * math.exp(-((x - 2.35) ** 2 / 3.0 + (z + 1.85) ** 2 / 2.5))
-    north_ridge = 0.32 * math.exp(-((x + 0.3) ** 2 / 5.5 + (z + 2.55) ** 2 / 2.2))
-    sw_mound = 0.22 * math.exp(-((x + 2.25) ** 2 / 2.4 + (z - 1.25) ** 2 / 2.0))
-    se_knoll = 0.19 * math.exp(-((x - 2.30) ** 2 / 2.6 + (z - 1.55) ** 2 / 1.8))
+    # Background & flanking hills
+    nw_hill = 0.54 * math.exp(-((x + 2.45) ** 2 / 3.2 + (z + 1.95) ** 2 / 2.6))
+    ne_hill = 0.46 * math.exp(-((x - 2.35) ** 2 / 3.0 + (z + 1.85) ** 2 / 2.5))
+    north_ridge = 0.34 * math.exp(-((x + 0.25) ** 2 / 5.5 + (z + 2.55) ** 2 / 2.2))
+
+    # Intentional foreground sculpting (eliminates flat front meadow patch)
+    fg_left_knoll = 0.24 * math.exp(-((x + 1.65) ** 2 / 1.85 + (z - 1.55) ** 2 / 1.35))
+    fg_left_west = 0.19 * math.exp(-((x + 2.85) ** 2 / 1.6 + (z - 0.85) ** 2 / 1.4))
+    fg_right_terrace = 0.21 * math.exp(-((x - 1.55) ** 2 / 1.95 + (z - 1.35) ** 2 / 1.35))
 
     # Multi-octave organic terrain undulation
-    n1 = noise.noise(Vector((x * 0.42 + 4.2, z * 0.42 - 2.8, 1.1))) * 0.12
-    n2 = noise.noise(Vector((x * 1.05 - 1.9, z * 1.05 + 3.4, 2.7))) * 0.045
+    n1 = noise.noise(Vector((x * 0.45 + 4.2, z * 0.45 - 2.8, 1.1))) * 0.11
+    n2 = noise.noise(Vector((x * 1.10 - 1.9, z * 1.10 + 3.4, 2.7))) * 0.042
 
-    # Creek channel carving with raised mossy bank shoulders
+    # Creek channel carving with clear, defined bank shoulders and smooth rim attenuation
     sz = stream_center_z(x)
     hw = stream_half_width(x)
     d_stream = abs(z - sz)
-    stream_cut = 0.44 * math.exp(-((d_stream / (hw * 1.32)) ** 2.2))
-    bank_shoulder = 0.06 * math.exp(-(((d_stream - hw * 1.45) / 0.28) ** 2))
+    rim_atten = 1.0 if rf < 0.76 else max(0.28, 1.0 - ((rf - 0.76) / 0.24) ** 1.5)
+    stream_cut = 0.52 * math.exp(-((d_stream / (hw * 1.18)) ** 2.4)) * rim_atten
+    bank_shoulder = 0.085 * math.exp(-(((d_stream - hw * 1.32) / 0.28) ** 2)) * rim_atten
 
-    # Bridge abutment mounds at x=0, z=sz ± 0.56 so path meets bridge deck seamlessly
-    abutment_south = 0.11 * math.exp(-((x ** 2) / 0.28 + ((z - (sz + 0.58)) ** 2) / 0.14))
-    abutment_north = 0.11 * math.exp(-((x ** 2) / 0.28 + ((z - (sz - 0.58)) ** 2) / 0.14))
+    # Bridge abutment mounds at x=0, z=sz ± 0.68 so path meets the longer bridge span seamlessly
+    abutment_south = 0.13 * math.exp(-((x ** 2) / 0.34 + ((z - (sz + 0.68)) ** 2) / 0.16))
+    abutment_north = 0.13 * math.exp(-((x ** 2) / 0.34 + ((z - (sz - 0.68)) ** 2) / 0.16))
 
-    # Subtle worn recess along the footpaths (except across the bridge span itself)
+    # Subtle worn recess along the footpaths
     d_path = path_distance_and_branch(x, z)
-    on_bridge = math.exp(-((x ** 2) / 0.35 + ((z - sz) ** 2) / 0.30))
-    path_cut = 0.055 * math.exp(-(d_path ** 2) / 0.22) * (1.0 - on_bridge)
+    on_bridge = math.exp(-((x ** 2) / 0.42 + ((z - sz) ** 2) / 0.44))
+    path_cut = 0.052 * math.exp(-(d_path ** 2) / 0.24) * (1.0 - on_bridge)
 
-    # Asymmetric organic turf rim roll-off
+    # Smooth, well-supported outer turf rim roll-off (no collapsed or pinched edges)
     edge_roll = 0.0
-    if rf > 0.74:
-        t = min(1.18, (rf - 0.74) / 0.26)
+    if rf > 0.76:
+        t = min(1.08, (rf - 0.76) / 0.24)
         ang = math.atan2(z, x)
-        cliff_var = 0.85 + 0.28 * math.sin(ang * 3.0 + 0.6)
-        edge_roll = -0.38 * (t ** 2.0) * cliff_var
+        cliff_var = 0.90 + 0.16 * math.sin(ang * 3.0 + 0.5)
+        edge_roll = -0.32 * (t ** 1.95) * cliff_var
 
     return (
-        0.18
+        0.20
         + nw_hill
         + ne_hill
         + north_ridge
-        + sw_mound
-        + se_knoll
+        + fg_left_knoll
+        + fg_left_west
+        + fg_right_terrace
         + n1
         + n2
         + bank_shoulder
@@ -284,17 +292,17 @@ def get_terrain_height(x, z):
 
 
 # ==============================================================================
-# 1. SCULPTED FLOATING ISLAND TERRAIN & ROCKY CLIFF OUTCROPS (NO LAYERED CAKE)
+# 1. SCULPTED FLOATING ISLAND TERRAIN & EMBEDDED 3D IDENTITY PLAQUE
 # ==============================================================================
 
 def build_island_terrain(materials):
     """
-    Builds the sculpted upper terrain with irregular draping turf lip, craggy rock underside
-    with protruding cliff buttresses, and emergent rock outcrops breaking through the rim.
+    Builds the sculpted upper terrain, craggy rock underside, and integrated cliff outcrops
+    with a clean, intentional front lip contour.
     """
     bm_top = bmesh.new()
-    rings = 64
-    segs = 144
+    rings = 68
+    segs = 152
 
     center_y = get_terrain_height(0.0, 0.0)
     center_vert = bm_top.verts.new((0.0, 0.0, center_y))
@@ -311,14 +319,13 @@ def build_island_terrain(materials):
             wz = rim_z * r_frac
             wy = get_terrain_height(wx, wz)
 
-            # Irregular draping turf lip that varies organically around the perimeter
+            # Controlled, smooth draping turf lip around the perimeter (no sharp folds)
             if ir >= rings - 3:
                 lip_t = (ir - (rings - 3)) / 3.0
-                drape_noise = noise.noise(Vector((wx * 1.1, wz * 1.1, 0.5)))
-                drape_depth = 0.12 * (0.75 + 0.55 * drape_noise)
-                wy -= drape_depth * (lip_t ** 1.5)
-                # Pull outer turf edge slightly inward/outward unevenly
-                flare = 1.0 + 0.015 * drape_noise * lip_t
+                drape_noise = noise.noise(Vector((wx * 0.9, wz * 0.9, 0.5)))
+                drape_depth = 0.095 * (0.82 + 0.36 * drape_noise)
+                wy -= drape_depth * (lip_t ** 1.45)
+                flare = 1.0 + 0.008 * drape_noise * lip_t
                 wx *= flare
                 wz *= flare
             row.append(bm_top.verts.new((wx, -wz, wy)))
@@ -339,36 +346,35 @@ def build_island_terrain(materials):
                 ring_verts[ir + 1][iseg],
             ))
 
-    # Rich vertex-color terrain splat shader (meadow grass, creek moss, sunlit ridge, pathside loam)
-    c_moss_deep = hex_to_rgba("#385A3E")
+    c_moss_bank = hex_to_rgba("#32583B")
     c_grass_mid = hex_to_rgba("#587850")
-    c_grass_sun = hex_to_rgba("#7A9866")
-    c_earth_loam = hex_to_rgba("#765A40")
+    c_grass_sun = hex_to_rgba("#7B9A67")
+    c_earth_loam = hex_to_rgba("#785C42")
 
     def terrain_color_fn(wx, wy, wz, nx, ny, nz):
         sz = stream_center_z(wx)
+        hw = stream_half_width(wx)
         d_stream = abs(wz - sz)
         d_path = path_distance_and_branch(wx, wz)
         rf = island_radial_factor(wx, wz)
         n_c = noise.noise(Vector((wx * 0.8 + 1.3, wz * 0.8 - 2.1, wy)))
 
-        # Base blend from mid grass to sunlit ridge grass
-        h_factor = max(0.0, min(1.0, (wy - 0.12) / 0.55 + 0.25 * n_c))
+        h_factor = max(0.0, min(1.0, (wy - 0.14) / 0.52 + 0.24 * n_c))
         col = lerp_color(c_grass_mid, c_grass_sun, h_factor)
 
-        # Lush dark moss along the creek banks
-        moss_factor = math.exp(-(d_stream ** 2) / 0.65)
-        col = lerp_color(col, c_moss_deep, moss_factor * 0.72)
+        # Rich dark moss & damp earth along the sculpted creek banks
+        bank_zone = math.exp(-((d_stream / (hw * 1.45)) ** 2.2))
+        col = lerp_color(col, c_moss_bank, bank_zone * 0.78)
 
-        # Warm earth transition along pathway edges and outer draping lip
-        path_edge = math.exp(-((d_path - 0.35) ** 2) / 0.08) * 0.42
-        rim_earth = max(0.0, (rf - 0.86) / 0.14) * 0.65
-        col = lerp_color(col, c_earth_loam, min(0.85, path_edge + rim_earth))
+        # Natural earth blending along pathway edges and outer turf lip
+        path_blend = math.exp(-(d_path ** 2) / 0.24) * 0.55
+        rim_earth = max(0.0, (rf - 0.88) / 0.12) * 0.58
+        col = lerp_color(col, c_earth_loam, min(0.82, path_blend + rim_earth))
         return col
 
     finalize_mesh_object("Island_Terrain_Top", bm_top, materials["grass_top"], terrain_color_fn)
 
-    # Unified Sculpted Craggy Rock & Earth Underside (NO horizontal cake bands!)
+    # Unified Sculpted Craggy Rock & Earth Underside
     bm_rock = bmesh.new()
     rock_rings = 36
     rock_rows = []
@@ -378,33 +384,30 @@ def build_island_terrain(materials):
         for iseg in range(segs):
             ang = (2.0 * math.pi * iseg) / segs
             rim_x, rim_z = island_rim_point(ang)
-            top_y = get_terrain_height(rim_x, rim_z) - 0.04
+            top_y = get_terrain_height(rim_x, rim_z) - 0.035
 
-            # Vertical craggy buttress ribs & natural cliff shelves visible from the 3/4 camera view
-            buttress = 0.075 * math.sin(ang * 7.0 + t * 1.8) + 0.045 * math.cos(ang * 11.0 - t * 2.5)
-            n_crag1 = noise.noise(Vector((rim_x * 0.72 + 1.4, rim_z * 0.72 - 2.2, t * 2.8)))
-            n_crag2 = noise.noise(Vector((rim_x * 1.60 - 0.8, rim_z * 1.60 + 1.9, t * 5.5)))
+            buttress = 0.068 * math.sin(ang * 7.0 + t * 1.8) + 0.042 * math.cos(ang * 11.0 - t * 2.5)
+            n_crag1 = noise.noise(Vector((rim_x * 0.70 + 1.4, rim_z * 0.70 - 2.2, t * 2.8)))
+            n_crag2 = noise.noise(Vector((rim_x * 1.55 - 0.8, rim_z * 1.55 + 1.9, t * 5.2)))
 
-            # Upper cliff wall stays wide before tapering into a craggy central spire below
-            ledge_step = 0.035 * math.sin(t * math.pi * 3.0 + n_crag1 * 2.0) * (1.0 - t)
-            taper = (1.005 - (t ** 2.15) * 0.90) + buttress * (1.0 - t * 0.5) * min(1.0, t * 2.2) + ledge_step
+            ledge_step = 0.032 * math.sin(t * math.pi * 3.0 + n_crag1 * 2.0) * (1.0 - t)
+            taper = (1.004 - (t ** 2.15) * 0.90) + buttress * (1.0 - t * 0.5) * min(1.0, t * 2.2) + ledge_step
 
             rx = rim_x * max(0.03, taper)
             rz = rim_z * max(0.03, taper)
 
-            radial_disp = (0.20 * n_crag1 + 0.08 * n_crag2) * (1.0 - t * 0.35) * min(1.0, t * 3.0)
+            radial_disp = (0.18 * n_crag1 + 0.07 * n_crag2) * (1.0 - t * 0.35) * min(1.0, t * 3.0)
             dir_len = max(1e-4, math.hypot(rim_x, rim_z))
             rx += (rim_x / dir_len) * radial_disp
             rz += (rim_z / dir_len) * radial_disp
 
-            depth_scale = 2.30 + 0.32 * math.sin(ang - 1.1) + 0.20 * math.cos(ang * 3.0)
-            ry = top_y - (depth_scale * (t ** 1.04)) + 0.12 * n_crag1 * (1.0 - t * 0.4)
+            depth_scale = 2.28 + 0.30 * math.sin(ang - 1.1) + 0.18 * math.cos(ang * 3.0)
+            ry = top_y - (depth_scale * (t ** 1.05)) + 0.10 * n_crag1 * (1.0 - t * 0.4)
 
             row.append(bm_rock.verts.new((rx, -rz, ry)))
         rock_rows.append(row)
 
-    # Cap the bottom apex cleanly
-    bottom_apex = bm_rock.verts.new((-0.12, 0.15, -2.42))
+    bottom_apex = bm_rock.verts.new((-0.10, 0.14, -2.38))
 
     for ir in range(rock_rings):
         for iseg in range(segs):
@@ -436,16 +439,14 @@ def build_island_terrain(materials):
 
     finalize_mesh_object("Island_Rock_Underside", bm_rock, materials["rock_underside"], rock_color_fn)
 
-    # Build Sculpted Cliff Ledges & Hanging Root Systems tucked naturally under the cliff face
+    # Integrated Cliff Ledges, Hanging Roots & Front Identity Plaque Stone Mantle (in Island_Soil_Rim)
     bm_outcrops = bmesh.new()
     outcrop_specs = [
-        # Integrated cliff buttress ledges tucked beneath the grass rim (y_offset < -0.22)
-        (-0.42, 0.93, -0.34, 0.52, 0.26, 0.36),
-        (-1.15, 0.92, -0.42, 0.58, 0.28, 0.38),
-        (-2.15, 0.93, -0.38, 0.54, 0.26, 0.36),
-        (2.35, 0.93, -0.36, 0.50, 0.25, 0.34),
-        (0.85, 0.92, -0.40, 0.52, 0.25, 0.35),
-        (1.65, 0.93, -0.45, 0.48, 0.24, 0.32),
+        (-0.42, 0.93, -0.36, 0.52, 0.25, 0.35),
+        (-1.15, 0.92, -0.42, 0.56, 0.27, 0.36),
+        (-2.15, 0.93, -0.38, 0.52, 0.25, 0.35),
+        (2.35, 0.93, -0.36, 0.48, 0.24, 0.33),
+        (0.85, 0.92, -0.40, 0.50, 0.24, 0.34),
     ]
     for idx, (ang, r_mult, y_off, sx, sy, sz_r) in enumerate(outcrop_specs):
         rim_x, rim_z = island_rim_point(ang)
@@ -456,74 +457,138 @@ def build_island_terrain(materials):
         for v in ret["verts"]:
             p = v.co
             n = noise.noise(Vector((p.x * 2.2 + idx, p.y * 2.2 - idx, p.z * 2.2)))
-            chisel = 1.0 + 0.24 * n - 0.14 * abs(p.z)
+            chisel = 1.0 + 0.22 * n - 0.14 * abs(p.z)
             v.co = Vector((
                 ox + p.x * sx * chisel,
                 -(oz + p.y * sz_r * chisel),
                 oy + p.z * sy * chisel,
             ))
 
-    # Hanging root tendrils underneath the turf overhang
-    root_angles = [-1.85, -1.15, -0.42, 0.48, 1.35, 2.15, 2.75]
-    for r_idx, ang in enumerate(root_angles):
-        rim_x, rim_z = island_rim_point(ang)
-        rx_start = rim_x * 0.95
-        rz_start = rim_z * 0.95
-        ry_start = get_terrain_height(rx_start, rz_start) - 0.14
-        segs_r = 7
-        cols_r = 6
-        rows_r = []
-        for ir in range(segs_r + 1):
-            t = ir / segs_r
-            rad = 0.048 * (1.0 - 0.82 * t)
-            cx = rx_start * (1.0 - 0.06 * t) + 0.05 * math.sin(t * 5.0 + r_idx)
-            cz = rz_start * (1.0 - 0.06 * t) + 0.05 * math.cos(t * 4.5 - r_idx)
-            cy = ry_start - 0.68 * (t ** 1.15)
-            row = []
-            for ic in range(cols_r):
-                a = (2.0 * math.pi * ic) / cols_r
-                row.append(bm_outcrops.verts.new((cx + math.cos(a) * rad, -(cz + math.sin(a) * rad), cy)))
-            rows_r.append(row)
-        for ir in range(segs_r):
-            for ic in range(cols_r):
-                nic = (ic + 1) % cols_r
-                bm_outcrops.faces.new((
-                    rows_r[ir][ic],
-                    rows_r[ir][nic],
-                    rows_r[ir + 1][nic],
-                    rows_r[ir + 1][ic],
-                ))
+    # Front-center sculpted stone mantle housing the embedded 3D Identity Plaque at (0.0, -0.34, 3.36)
+    plaque_cx, plaque_cy, plaque_cz = 0.0, -0.34, 3.36
+    plaque_pitch = math.radians(-22.0)
+
+    def plaque_to_world(lx, ly, lz):
+        ry = ly * math.cos(plaque_pitch) - lz * math.sin(plaque_pitch)
+        rz = ly * math.sin(plaque_pitch) + lz * math.cos(plaque_pitch)
+        return Vector((plaque_cx + lx, -(plaque_cz + rz), plaque_cy + ry))
+
+    # Chiseled stone architectural surround embedded into the front island cliff
+    add_beveled_box(
+        bm_outcrops,
+        lambda co: plaque_to_world(co.x * 2.86, co.z * 0.80, -0.06 + co.y * 0.34),
+        bevel_offset=0.042,
+        segments=3,
+    )
 
     finalize_mesh_object("Island_Soil_Rim", bm_outcrops, materials["rock_underside"], rock_color_fn)
 
 
+def build_embedded_identity_plaque(materials):
+    """
+    Physically embeds Evelyn Lin's 3D Identity Plaque into the front cliff mantle of the floating island:
+    - Identity_Plaque_Frame: Beveled champagne-brass outer bezel & corner rivets
+    - Identity_Plaque_Plate: Recessed deep-forest oxidized slate/bronze inner tablet
+    - Identity_Plaque_Text3D: Extruded & beveled 3D typography ('Evelyn Lin' & 'UX & INTERACTIVE EXPERIENCE DESIGNER')
+    """
+    plaque_cx, plaque_cy, plaque_cz = 0.0, -0.34, 3.36
+    plaque_pitch = math.radians(-22.0)
+
+    def to_world(lx, ly, lz):
+        ry = ly * math.cos(plaque_pitch) - lz * math.sin(plaque_pitch)
+        rz = ly * math.sin(plaque_pitch) + lz * math.cos(plaque_pitch)
+        return Vector((plaque_cx + lx, -(plaque_cz + rz), plaque_cy + ry))
+
+    # 1. Beveled Champagne-Brass Frame + 4 Corner Rivets
+    bm_frame = bmesh.new()
+    add_beveled_box(
+        bm_frame,
+        lambda co: to_world(co.x * 2.66, co.z * 0.68, 0.09 + co.y * 0.10),
+        bevel_offset=0.020,
+        segments=3,
+    )
+    for rx_s in (-1.20, 1.20):
+        for ry_s in (-0.23, 0.23):
+            add_beveled_box(
+                bm_frame,
+                lambda co, rxs=rx_s, rys=ry_s: to_world(
+                    rxs + co.x * 0.042,
+                    rys + co.z * 0.042,
+                    0.155 + co.y * 0.028,
+                ),
+                bevel_offset=0.007,
+                segments=2,
+            )
+    finalize_mesh_object("Identity_Plaque_Frame", bm_frame, materials["champagne_brass"])
+
+    # 2. Recessed Deep-Forest Slate / Bronze Inner Tablet
+    bm_plate = bmesh.new()
+    add_beveled_box(
+        bm_plate,
+        lambda co: to_world(co.x * 2.50, co.z * 0.55, 0.115 + co.y * 0.08),
+        bevel_offset=0.014,
+        segments=2,
+    )
+    finalize_mesh_object("Identity_Plaque_Plate", bm_plate, materials["mailbox_forest_metal"])
+
+    # 3. Physical 3D Relief Typography: 'Evelyn Lin' + 'UX & INTERACTIVE EXPERIENCE DESIGNER'
+    bpy.ops.object.text_add(location=(0, 0, 0))
+    name_obj = bpy.context.active_object
+    name_obj.name = "Identity_Plaque_Name3D"
+    name_obj.data.body = "Evelyn Lin"
+    name_obj.data.align_x = 'CENTER'
+    name_obj.data.align_y = 'CENTER'
+    name_obj.data.size = 0.235
+    name_obj.data.space_character = 1.04
+    name_obj.data.extrude = 0.018
+    name_obj.data.bevel_depth = 0.0024
+    name_obj.data.bevel_resolution = 2
+    bpy.ops.object.convert(target='MESH')
+    for v in name_obj.data.vertices:
+        v.co = to_world(v.co.x, 0.075 + v.co.y, 0.156 + v.co.z)
+    name_obj.data.materials.append(materials["ivory_lettering"])
+    for poly in name_obj.data.polygons:
+        poly.use_smooth = True
+
+    bpy.ops.object.text_add(location=(0, 0, 0))
+    title_obj = bpy.context.active_object
+    title_obj.name = "Identity_Plaque_Title3D"
+    title_obj.data.body = "UX & INTERACTIVE EXPERIENCE DESIGNER"
+    title_obj.data.align_x = 'CENTER'
+    title_obj.data.align_y = 'CENTER'
+    title_obj.data.size = 0.082
+    title_obj.data.space_character = 1.10
+    title_obj.data.extrude = 0.014
+    title_obj.data.bevel_depth = 0.0014
+    title_obj.data.bevel_resolution = 1
+    bpy.ops.object.convert(target='MESH')
+    for v in title_obj.data.vertices:
+        v.co = to_world(v.co.x, -0.138 + v.co.y, 0.154 + v.co.z)
+    title_obj.data.materials.append(materials["champagne_brass"])
+    for poly in title_obj.data.polygons:
+        poly.use_smooth = True
+
+
 # ==============================================================================
-# 2. THREE DISTINCT HIGH-FIDELITY TREE ARCHETYPES (NO STACKED SPHERES)
+# 2. THREE DISTINCT HIGH-FIDELITY TREE ARCHETYPES (PRESERVED FROM V2)
 # ==============================================================================
 
 def add_foliage_cluster_lobe(bm, cx, cy, cz, rx, ry, rz, yaw, pitch, seed_val):
-    """
-    Creates an organic, leaf-tufted foliage cluster with ruffled leaf-clump displacement
-    rather than a smooth primitive sphere.
-    """
     ret = bmesh.ops.create_icosphere(bm, subdivisions=3, radius=1.0)
     cy_cos, cy_sin = math.cos(yaw), math.sin(yaw)
     cp_cos, cp_sin = math.cos(pitch), math.sin(pitch)
 
     for v in ret["verts"]:
         p = v.co
-        # Multi-frequency leaf-clump sculpting
         n_broad = noise.noise(Vector((p.x * 1.7 + seed_val, p.y * 1.7 - seed_val, p.z * 1.7)))
         n_tuft = abs(noise.noise(Vector((p.x * 3.8 - seed_val, p.y * 3.8 + seed_val, p.z * 3.8))))
         disp = 1.0 + 0.18 * n_broad + 0.14 * (n_tuft - 0.35)
 
-        # Slightly scalloped bottom, billowy leaf-tufted crown top
         y_shape = 1.08 if p.z >= 0 else 0.64
         lx = p.x * rx * disp
         lz = p.y * rz * disp
         ly = p.z * ry * disp * y_shape
 
-        # Pitch & yaw rotation so clusters orient along branch growth directions
         ly_p = ly * cp_cos - lz * cp_sin
         lz_p = ly * cp_sin + lz * cp_cos
         wx = cx + lx * cy_cos + lz_p * cy_sin
@@ -533,7 +598,6 @@ def add_foliage_cluster_lobe(bm, cx, cy, cz, rx, ry, rz, yaw, pitch, seed_val):
 
 
 def add_curved_branch_tube(bm, points_xyz_rad, segs=12, bark_groove_amp=0.04):
-    """Builds a smooth curved trunk or branch tube along a sequence of (x, y, z, radius) control points."""
     rows = []
     n_pts = len(points_xyz_rad)
     for idx, (px, py, pz, rad) in enumerate(points_xyz_rad):
@@ -554,7 +618,6 @@ def add_curved_branch_tube(bm, points_xyz_rad, segs=12, bark_groove_amp=0.04):
         row = []
         for iseg in range(segs):
             ang = (2.0 * math.pi * iseg) / segs
-            # Root buttress flare near base (t < 0.28) + twisted bark ridges
             flair = 1.0 + (0.34 * max(0.0, 1.0 - t * 3.6) * math.cos(ang * 4.0 + px))
             groove = 1.0 + bark_groove_amp * math.sin(ang * 6.0 + t * 5.0)
             r_eff = rad * flair * groove
@@ -572,19 +635,15 @@ def add_curved_branch_tube(bm, points_xyz_rad, segs=12, bark_groove_amp=0.04):
 
 
 def make_foliage_color_fn(tree_x, tree_y_base, tree_z, palette_mode):
-    """
-    Computes rich 3D vertex color with sunlit top highlights, inner-canopy ambient occlusion,
-    and per-cluster botanical hue variation.
-    """
-    if palette_mode == 0:  # Deep Emerald & Sunlit Sage Oak
+    if palette_mode == 0:
         c_shadow = hex_to_rgba("#16382B")
         c_mid = hex_to_rgba("#386546")
         c_sun = hex_to_rgba("#7FA368")
-    elif palette_mode == 1:  # Warm Golden-Moss & Olive Birch
+    elif palette_mode == 1:
         c_shadow = hex_to_rgba("#274734")
         c_mid = hex_to_rgba("#557A4E")
         c_sun = hex_to_rgba("#9CB678")
-    else:  # Cool Pine & Alpine Spruce Cedar
+    else:
         c_shadow = hex_to_rgba("#14332A")
         c_mid = hex_to_rgba("#2E5947")
         c_sun = hex_to_rgba("#688E6C")
@@ -597,7 +656,6 @@ def make_foliage_color_fn(tree_x, tree_y_base, tree_z, palette_mode):
         height_t = max(0.0, min(1.0, (wy - (tree_y_base + 1.1)) / 1.85))
         n_cluster = noise.noise(Vector((wx * 1.4, wy * 1.4, wz * 1.4)))
 
-        # Interior ambient occlusion near trunk core
         radial_d = math.hypot(wx - tree_x, wz - tree_z)
         core_ao = max(0.0, min(1.0, (radial_d - 0.25) / 0.85))
 
@@ -623,11 +681,9 @@ def make_bark_color_fn(is_birch=False):
         n_b = noise.noise(Vector((wx * 2.5, wy * 4.0, wz * 2.5)))
         col = lerp_color(c_dark, c_base, 0.45 + 0.45 * max(0.0, nx * 0.5 + ny * 0.5) + 0.2 * n_b)
         if is_birch:
-            # Horizontal birch bark lenticel markings
             band = math.sin(wy * 22.0 + n_b * 4.0)
             if band > 0.72:
                 col = lerp_color(col, c_dark, 0.65)
-        # Moss creeping up the lower trunk base
         if wy < 0.72:
             moss_t = max(0.0, (0.72 - wy) / 0.45) * (0.6 + 0.4 * n_b)
             col = lerp_color(col, c_moss, min(0.75, moss_t))
@@ -637,14 +693,9 @@ def make_bark_color_fn(is_birch=False):
 
 
 def create_tree_archetype_oak(name, x, z, scale, lean_x, lean_z, palette_mode, materials):
-    """
-    Archetype 1: Gnarled Ancient Woodland Oak.
-    Broad, sweeping multi-limb boughs with visible secondary branches and 22 varied leaf clusters.
-    """
     y0 = get_terrain_height(x, z) - 0.06
     bm_trunk = bmesh.new()
 
-    # S-curved gnarled main trunk
     trunk_pts = []
     steps = 11
     h = 1.65 * scale
@@ -657,9 +708,6 @@ def create_tree_archetype_oak(name, x, z, scale, lean_x, lean_z, palette_mode, m
         trunk_pts.append((px, py, pz, rad))
     add_curved_branch_tube(bm_trunk, trunk_pts, segs=14, bark_groove_amp=0.055)
 
-    top_x, top_y, top_z, _ = trunk_pts[-1]
-
-    # 5 major diverging oak limbs + sub-branches
     bough_specs = [
         (-0.78, 0.58, 0.22, 0.11, -0.35),
         (0.74, 0.54, -0.18, 0.11, 0.32),
@@ -685,30 +733,24 @@ def create_tree_archetype_oak(name, x, z, scale, lean_x, lean_z, palette_mode, m
 
     finalize_mesh_object(f"{name}_Trunk", bm_trunk, materials["wood_bark"], make_bark_color_fn(False))
 
-    # 22 varied, asymmetric leaf-cluster boughs arranged around the 5 limb tips (with sky gaps!)
     bm_canopy = bmesh.new()
     cluster_offsets = [
-        # Around Bough 0 (Left-Front)
         (0, 0.0, 0.04, 0.0, 0.44, 0.28, 0.40, 0.2, 0.1),
         (0, -0.26, -0.06, 0.14, 0.35, 0.23, 0.32, 0.5, -0.12),
         (0, 0.18, 0.16, 0.18, 0.32, 0.22, 0.30, -0.3, 0.08),
         (0, -0.14, 0.18, -0.22, 0.34, 0.24, 0.32, 0.1, 0.15),
-        # Around Bough 1 (Right-Back)
         (1, 0.0, 0.05, 0.0, 0.43, 0.27, 0.39, -0.25, -0.1),
         (1, 0.25, -0.05, -0.12, 0.34, 0.22, 0.31, 0.4, 0.12),
         (1, -0.16, 0.15, -0.20, 0.33, 0.22, 0.30, -0.4, -0.08),
         (1, 0.15, 0.18, 0.20, 0.32, 0.23, 0.29, 0.2, -0.14),
-        # Around Bough 2 (Back-Left)
         (2, 0.0, 0.04, 0.0, 0.42, 0.27, 0.38, 0.3, 0.08),
         (2, -0.24, -0.04, -0.18, 0.34, 0.22, 0.32, -0.2, 0.14),
         (2, 0.18, 0.14, -0.22, 0.32, 0.21, 0.30, 0.6, -0.1),
         (2, -0.10, 0.22, 0.12, 0.30, 0.20, 0.28, -0.5, 0.05),
-        # Around Bough 3 (Front-Right)
         (3, 0.0, 0.04, 0.0, 0.40, 0.26, 0.36, -0.35, -0.08),
         (3, 0.22, -0.06, 0.16, 0.32, 0.21, 0.30, 0.25, 0.12),
         (3, -0.15, 0.14, 0.18, 0.30, 0.20, 0.28, -0.15, -0.12),
         (3, 0.12, 0.18, -0.14, 0.29, 0.20, 0.27, 0.45, 0.06),
-        # Around Bough 4 (Upper Crown Apex — Asymmetric)
         (4, 0.0, 0.06, 0.0, 0.45, 0.29, 0.41, 0.15, 0.05),
         (4, -0.26, 0.02, 0.10, 0.36, 0.24, 0.33, -0.3, 0.12),
         (4, 0.24, 0.04, -0.12, 0.35, 0.23, 0.32, 0.35, -0.10),
@@ -742,14 +784,9 @@ def create_tree_archetype_oak(name, x, z, scale, lean_x, lean_z, palette_mode, m
 
 
 def create_tree_archetype_birch(name, x, z, scale, lean_x, lean_z, palette_mode, materials):
-    """
-    Archetype 2: Slender Multi-Stem Stream Birch / Alder.
-    Graceful leaning twin trunks with pale lenticel bark and airy, layered foliage clusters at varied heights.
-    """
     y0 = get_terrain_height(x, z) - 0.05
     bm_trunk = bmesh.new()
 
-    # Main slender leaning stem
     h_main = 1.95 * scale
     pts_main = []
     for i in range(12):
@@ -761,7 +798,6 @@ def create_tree_archetype_birch(name, x, z, scale, lean_x, lean_z, palette_mode,
         pts_main.append((px, py, pz, rad))
     add_curved_branch_tube(bm_trunk, pts_main, segs=12, bark_groove_amp=0.02)
 
-    # Secondary companion stem diverging from low base
     h_sec = 1.45 * scale
     side_sign = -1.0 if lean_x >= 0 else 1.0
     pts_sec = []
@@ -774,7 +810,6 @@ def create_tree_archetype_birch(name, x, z, scale, lean_x, lean_z, palette_mode,
         pts_sec.append((px, py, pz, rad))
     add_curved_branch_tube(bm_trunk, pts_sec, segs=10, bark_groove_amp=0.02)
 
-    # 3 delicate upper branches off main stem
     branch_anchors = [
         (0.58, -0.46, 0.35, 0.18),
         (0.74, 0.44, 0.38, -0.20),
@@ -798,27 +833,21 @@ def create_tree_archetype_birch(name, x, z, scale, lean_x, lean_z, palette_mode,
 
     finalize_mesh_object(f"{name}_Trunk", bm_trunk, materials["wood_bark"], make_bark_color_fn(True))
 
-    # Airy, multi-level birch leaf clusters around the 5 tips
     bm_canopy = bmesh.new()
     birch_clusters = [
-        # Tip 0 (Main top crown)
         (0, 0.0, 0.05, 0.0, 0.38, 0.24, 0.35, 0.1, 0.05),
         (0, -0.22, -0.06, 0.10, 0.30, 0.19, 0.28, -0.3, 0.12),
         (0, 0.20, -0.04, -0.10, 0.29, 0.18, 0.27, 0.4, -0.10),
         (0, 0.02, 0.18, -0.04, 0.27, 0.18, 0.25, 0.0, 0.08),
-        # Tip 1 (Companion stem lower-side canopy pad)
         (1, 0.0, 0.04, 0.0, 0.35, 0.21, 0.32, -0.25, 0.10),
         (1, side_sign * 0.20, -0.05, 0.10, 0.27, 0.17, 0.25, 0.35, -0.08),
         (1, -side_sign * 0.12, 0.12, -0.10, 0.25, 0.16, 0.24, -0.15, 0.06),
-        # Tip 2 (Mid-left branch)
         (2, 0.0, 0.02, 0.0, 0.33, 0.20, 0.30, 0.3, 0.10),
         (2, -0.18, -0.06, 0.08, 0.25, 0.16, 0.24, -0.2, -0.12),
         (2, 0.12, 0.10, -0.08, 0.24, 0.16, 0.22, 0.5, 0.05),
-        # Tip 3 (Upper-right branch)
         (3, 0.0, 0.03, 0.0, 0.34, 0.20, 0.31, -0.3, -0.08),
         (3, 0.18, -0.05, -0.08, 0.26, 0.17, 0.24, 0.2, 0.12),
         (3, -0.10, 0.11, 0.08, 0.24, 0.15, 0.22, -0.4, -0.05),
-        # Tip 4 (High back branch)
         (4, 0.0, 0.04, 0.0, 0.32, 0.20, 0.29, 0.15, 0.08),
         (4, -0.15, 0.08, -0.10, 0.25, 0.16, 0.23, -0.25, 0.10),
         (4, 0.14, -0.04, 0.09, 0.24, 0.15, 0.22, 0.35, -0.06),
@@ -849,11 +878,6 @@ def create_tree_archetype_birch(name, x, z, scale, lean_x, lean_z, palette_mode,
 
 
 def create_tree_archetype_cedar(name, x, z, scale, lean_x, lean_z, palette_mode, materials):
-    """
-    Archetype 3: Stylized Woodland Cedar / Spruce.
-    Tall, tapered vertical conifer with swept, asymmetric drooping bough pads arranged spirally
-    around a curved reddish-brown trunk (providing strong vertical silhouette contrast).
-    """
     y0 = get_terrain_height(x, z) - 0.06
     bm_trunk = bmesh.new()
 
@@ -871,9 +895,7 @@ def create_tree_archetype_cedar(name, x, z, scale, lean_x, lean_z, palette_mode,
     finalize_mesh_object(f"{name}_Trunk", bm_trunk, materials["wood_bark"], make_bark_color_fn(False))
 
     bm_canopy = bmesh.new()
-    # Spiral arrangement of 19 swept, layered cedar bough clusters from mid-trunk to spire tip
     whorls = [
-        # (height_frac, num_pads, radius_out, rx, ry, rz, droop_pitch, phase_deg)
         (0.40, 5, 0.44, 0.38, 0.16, 0.28, 0.24, 0.0),
         (0.55, 5, 0.36, 0.33, 0.15, 0.25, 0.20, 36.0),
         (0.70, 4, 0.28, 0.28, 0.15, 0.22, 0.16, 18.0),
@@ -915,13 +937,13 @@ def create_tree_archetype_cedar(name, x, z, scale, lean_x, lean_z, palette_mode,
 
 
 # ==============================================================================
-# 3. INTEGRATED PATHWAYS, PEBBLE CREEK & ARCHED BRIDGE WITH ABUTMENTS
+# 3. INTEGRATED PATHWAYS, WIDENED WOODLAND CREEK & ARCHED OAK BRIDGE
 # ==============================================================================
 
 def build_pathway_and_cobbles(materials):
     """
-    Builds continuous, organically bordered woodland pathways that connect directly onto
-    both ends of the arched wooden bridge and diverge genuinely across the 3D terrain.
+    Continuous woodland pathways that blend organically into the sculpted front terrain
+    and connect directly onto both ends of the arched oak bridge.
     """
     bm_path = bmesh.new()
 
@@ -931,11 +953,11 @@ def build_pathway_and_cobbles(materials):
         for idx, (px, pz, y_lift) in enumerate(pts):
             t = idx / max(1, n_pts - 1)
             hw = half_w_start * (1.0 - t) + half_w_end * t
-            if taper_start and t < 0.15:
-                hw *= math.sin((t / 0.15) * math.pi * 0.5)
-            if taper_end and t > 0.82:
-                hw *= math.sin(((1.0 - t) / 0.18) * math.pi * 0.5)
-            hw = max(0.05, hw)
+            if taper_start and t < 0.22:
+                hw *= math.sin((t / 0.22) * math.pi * 0.5)
+            if taper_end and t > 0.80:
+                hw *= math.sin(((1.0 - t) / 0.20) * math.pi * 0.5)
+            hw = max(0.04, hw)
 
             if idx < n_pts - 1:
                 dx = pts[idx + 1][0] - px
@@ -953,8 +975,11 @@ def build_pathway_and_cobbles(materials):
                 wiggle = 0.035 * math.sin(t * 13.0 + u * 2.3)
                 wx = px + nx_dir * (hw + wiggle) * u
                 wz = pz + nz_dir * (hw + wiggle) * u
-                crown = 0.020 * (1.0 - u * u) - 0.015 * (u ** 4)
-                wy = get_terrain_height(wx, wz) + 0.012 + crown + y_lift * (1.0 - 0.35 * u * u)
+                # Edges sink smoothly below terrain surface so path blends without hard borders
+                edge_sink = 0.016 * (1.0 - u * u) - 0.018 * (u ** 4)
+                # Feather front tip into the terrain
+                tip_feather = min(1.0, t / 0.16) if taper_start else 1.0
+                wy = get_terrain_height(wx, wz) + (0.008 + edge_sink) * tip_feather + y_lift * (1.0 - 0.35 * u * u)
                 row.append(bm_path.verts.new((wx, -wz, wy)))
             rows.append(row)
 
@@ -962,65 +987,64 @@ def build_pathway_and_cobbles(materials):
             for c in range(len(rows[r]) - 1):
                 bm_path.faces.new((rows[r][c], rows[r][c + 1], rows[r + 1][c + 1], rows[r + 1][c]))
 
-    sz_center = stream_center_z(0.0)  # ~0.26
+    sz_center = stream_center_z(0.0)  # ~0.22
 
-    # South approach: starts at front meadow (z=2.36) and rises directly onto the south bridge abutment (z=sz+0.55)
-    south_steps = 16
+    # South approach: feathers smoothly from front threshold (z=2.55) onto the south bridge abutment (z=sz+0.60)
+    south_steps = 18
     south_pts = []
     for i in range(south_steps + 1):
         t = i / south_steps
-        pz = 2.36 * (1.0 - t) + (sz_center + 0.50) * t
-        px = 0.05 * math.sin(t * math.pi * 1.5) * (1.0 - t)
-        # Smooth ramp lift at the bridge threshold
+        pz = 2.55 * (1.0 - t) + (sz_center + 0.60) * t
+        px = 0.06 * math.sin(t * math.pi * 1.4) * (1.0 - t)
         ramp_lift = 0.055 * (t ** 3)
         south_pts.append((px, pz, ramp_lift))
 
-    # North bridge exit into the central crossroads fork (from z=sz-0.50 to z=-0.38)
+    # North bridge exit into the central crossroads fork (from z=sz-0.60 to z=-0.42)
     north_steps = 8
     north_pts = []
     for i in range(north_steps + 1):
         t = i / north_steps
-        pz = (sz_center - 0.50) * (1.0 - t) + (-0.36) * t
+        pz = (sz_center - 0.60) * (1.0 - t) + (-0.42) * t
         ramp_lift = 0.055 * ((1.0 - t) ** 3)
         north_pts.append((0.0, pz, ramp_lift))
 
-    # Left crossroads branch: climbs northwest past the UX Portfolio sign (-1.58, -0.64) toward the oak hill
+    # Left crossroads branch: climbs northwest past the 'Design Path' sign (-1.58, -0.64)
     left_steps = 22
     left_pts = []
     for i in range(left_steps + 1):
         t = i / left_steps
         px = -2.42 * t - 0.14 * math.sin(t * math.pi)
-        pz = -0.22 - 1.36 * (t ** 1.05)
+        pz = -0.26 - 1.34 * (t ** 1.05)
         left_pts.append((px, pz, 0.008 * (1.0 - t)))
 
-    # Right crossroads branch: curves northeast past the Game Portfolio sign (+1.58, -0.60) toward the cedar ridge
+    # Right crossroads branch: curves northeast past the 'Play Path' sign (+1.58, -0.60)
     right_steps = 22
     right_pts = []
     for i in range(right_steps + 1):
         t = i / right_steps
         px = 2.42 * t + 0.14 * math.sin(t * math.pi)
-        pz = -0.22 - 1.28 * (t ** 1.05)
+        pz = -0.26 - 1.26 * (t ** 1.05)
         right_pts.append((px, pz, 0.008 * (1.0 - t)))
 
-    # Mailbox side spur connecting main south path to the mailbox cobblestone plinth at (1.18, 1.08)
+    # Mailbox side spur connecting main south path to the mailbox alcove at (1.18, 1.15)
     spur_pts = [
-        (0.18 + 1.04 * (i / 8.0), 1.16 - 0.08 * (i / 8.0), 0.006)
+        (0.16 + 1.04 * (i / 8.0), 1.24 - 0.09 * (i / 8.0), 0.006)
         for i in range(9)
     ]
 
-    add_organic_path_ribbon(south_pts, 0.48, 0.45, taper_start=True, taper_end=False)
+    add_organic_path_ribbon(south_pts, 0.44, 0.45, taper_start=True, taper_end=False)
     add_organic_path_ribbon(north_pts, 0.46, 0.56, taper_start=False, taper_end=False)
     add_organic_path_ribbon(left_pts, 0.44, 0.30, taper_start=False, taper_end=True)
     add_organic_path_ribbon(right_pts, 0.44, 0.30, taper_start=False, taper_end=True)
     add_organic_path_ribbon(spur_pts, 0.28, 0.36, taper_start=False, taper_end=True)
 
     c_path_center = hex_to_rgba("#C2A47C")
-    c_path_edge = hex_to_rgba("#8A6E4E")
+    c_path_edge = hex_to_rgba("#726146")
 
     def path_color_fn(wx, wy, wz, nx, ny, nz):
         d = path_distance_and_branch(wx, wz)
         n_p = noise.noise(Vector((wx * 2.2, wz * 2.2, wy)))
-        t = max(0.0, min(1.0, (d / 0.42) + 0.18 * n_p))
+        t = max(0.0, min(1.0, (d / 0.38) + 0.18 * n_p))
         return lerp_color(c_path_center, c_path_edge, t)
 
     finalize_mesh_object("Crossroads_Pathway", bm_path, materials["pathway_earth"], path_color_fn)
@@ -1028,19 +1052,16 @@ def build_pathway_and_cobbles(materials):
     # Irregular flat sandstone stepping flagstones & border cobbles
     bm_stones = bmesh.new()
     stone_coords = [
-        # South approach flagstones leading right up to the bridge deck
-        (0.02, 2.16, 0.20, 0.14), (-0.12, 1.90, 0.17, 0.13), (0.11, 1.64, 0.18, 0.15),
-        (-0.09, 1.38, 0.17, 0.13), (0.09, 1.12, 0.16, 0.13), (-0.04, 0.89, 0.18, 0.14),
-        # Mailbox plinth cobbles
-        (0.62, 1.14, 0.15, 0.12), (0.94, 1.10, 0.18, 0.15), (1.20, 1.08, 0.26, 0.22),
-        # Crossroads fork & diverging branches
-        (0.0, -0.34, 0.22, 0.17), (-0.42, -0.46, 0.18, 0.14), (-0.84, -0.66, 0.19, 0.14),
-        (-1.25, -0.88, 0.17, 0.13), (-1.68, -1.10, 0.18, 0.14), (-2.08, -1.32, 0.15, 0.12),
-        (0.42, -0.46, 0.18, 0.14), (0.84, -0.64, 0.19, 0.14), (1.25, -0.85, 0.17, 0.13),
-        (1.68, -1.06, 0.18, 0.14), (2.08, -1.26, 0.15, 0.12),
+        (0.02, 2.32, 0.18, 0.13), (-0.11, 2.05, 0.17, 0.13), (0.10, 1.78, 0.18, 0.15),
+        (-0.09, 1.50, 0.17, 0.13), (0.09, 1.22, 0.16, 0.13), (-0.04, 0.98, 0.18, 0.14),
+        (0.62, 1.20, 0.15, 0.12), (0.94, 1.16, 0.18, 0.15), (1.20, 1.14, 0.26, 0.22),
+        (0.0, -0.40, 0.22, 0.17), (-0.42, -0.50, 0.18, 0.14), (-0.84, -0.68, 0.19, 0.14),
+        (-1.25, -0.90, 0.17, 0.13), (-1.68, -1.12, 0.18, 0.14), (-2.08, -1.34, 0.15, 0.12),
+        (0.42, -0.50, 0.18, 0.14), (0.84, -0.66, 0.19, 0.14), (1.25, -0.87, 0.17, 0.13),
+        (1.68, -1.08, 0.18, 0.14), (2.08, -1.28, 0.15, 0.12),
     ]
     for idx, (sx, sz, rx_s, rz_s) in enumerate(stone_coords):
-        sy = get_terrain_height(sx, sz) + 0.020
+        sy = get_terrain_height(sx, sz) + 0.018
         ret = bmesh.ops.create_icosphere(bm_stones, subdivisions=3, radius=1.0)
         yaw = (idx * 0.83) % math.pi
         for v in ret["verts"]:
@@ -1067,74 +1088,104 @@ def build_pathway_and_cobbles(materials):
 
 def build_stream_and_bridge(materials):
     """
-    Builds a naturalistic shallow woodland creek with varied width, pebble bed, submerged stones,
-    and an arched oak bridge physically anchored into stone-and-timber bank abutments.
+    Widened, visually prominent shallow woodland creek with:
+    - Sculpted pebble-and-sand creek bed (Stream_Bed)
+    - Generous water surface area around and under the bridge (Stream_Water)
+    - Arched 13-plank hand-hewn oak footbridge spanning bank-to-bank
     """
+    bm_bed = bmesh.new()
     bm_water = bmesh.new()
-    steps = 76
-    cols = 13
-    rows = []
+    steps = 84
+    cols = 15
+    bed_rows = []
+    water_rows = []
+
     for i in range(steps + 1):
-        x = -3.85 + 7.70 * (i / steps)
+        x = -3.65 + 7.20 * (i / steps)
         cz = stream_center_z(x)
         rf = island_radial_factor(x, cz)
-        if rf > 0.91:
+        if rf > 0.84:
             continue
         dx = 0.07
         dz = stream_center_z(x + dx) - cz
         length = math.hypot(dx, dz)
         nx_d, nz_d = -dz / length, dx / length
 
-        end_taper = min(1.0, (0.91 - rf) / 0.14)
-        hw = stream_half_width(x) * (0.45 + 0.55 * end_taper)
+        end_taper = min(1.0, (0.84 - rf) / 0.14)
+        hw = stream_half_width(x) * (0.48 + 0.52 * end_taper)
         bed_center_y = get_terrain_height(x, cz)
-        water_y = bed_center_y + 0.135
+        water_y = bed_center_y + 0.175 * (0.65 + 0.35 * end_taper)
 
-        row = []
+        b_row = []
+        w_row = []
         for c in range(cols):
             u = (c / (cols - 1)) * 2.0 - 1.0
             wx = x + nx_d * hw * u
             wz = cz + nz_d * hw * u
-            # Subtle flow ripples
-            ripple = 0.006 * math.sin(x * 5.2 + u * 2.8) * (1.0 - 0.5 * u * u)
-            row.append(bm_water.verts.new((wx, -wz, water_y + ripple)))
-        rows.append(row)
 
-    for r in range(len(rows) - 1):
-        for c in range(len(rows[r]) - 1):
-            bm_water.faces.new((rows[r][c], rows[r][c + 1], rows[r + 1][c + 1], rows[r + 1][c]))
+            # Pebble riverbed concave profile
+            bed_y = bed_center_y + 0.14 * (u * u) + 0.015 * math.sin(x * 8.0 + u * 6.0)
+            b_row.append(bm_bed.verts.new((wx, -wz, bed_y)))
 
-    c_water_deep = hex_to_rgba("#214B47")
-    c_water_shallow = hex_to_rgba("#4E7261")
-    c_water_foam = hex_to_rgba("#8EB2A4")
+            # Gentle surface current undulation
+            ripple = 0.008 * math.sin(x * 4.8 + u * 3.0) * (1.0 - 0.4 * u * u)
+            w_row.append(bm_water.verts.new((wx, -wz, water_y + ripple)))
+        bed_rows.append(b_row)
+        water_rows.append(w_row)
+
+    for r in range(len(bed_rows) - 1):
+        for c in range(len(bed_rows[r]) - 1):
+            bm_bed.faces.new((bed_rows[r][c], bed_rows[r][c + 1], bed_rows[r + 1][c + 1], bed_rows[r + 1][c]))
+            bm_water.faces.new((water_rows[r][c], water_rows[r][c + 1], water_rows[r + 1][c + 1], water_rows[r + 1][c]))
+
+    c_bed_deep = hex_to_rgba("#1E332E")
+    c_bed_pebble = hex_to_rgba("#524D40")
+    finalize_mesh_object(
+        "Stream_Bed",
+        bm_bed,
+        materials["rock_underside"],
+        lambda wx, wy, wz, nx, ny, nz: lerp_color(
+            c_bed_deep,
+            c_bed_pebble,
+            min(1.0, abs(wz - stream_center_z(wx)) / max(0.25, stream_half_width(wx))),
+        ),
+    )
+
+    c_water_deep = hex_to_rgba("#1C5854")
+    c_water_mid = hex_to_rgba("#327A73")
+    c_water_shallow = hex_to_rgba("#5A8C79")
+    c_water_foam = hex_to_rgba("#A8CFC4")
 
     def water_color_fn(wx, wy, wz, nx, ny, nz):
         cz = stream_center_z(wx)
-        hw = max(0.2, stream_half_width(wx))
+        hw = max(0.25, stream_half_width(wx))
         edge_t = min(1.0, abs(wz - cz) / hw)
-        col = lerp_color(c_water_deep, c_water_shallow, edge_t ** 1.3)
-        # Subtle riffle highlight near rocks and spring
-        n_w = noise.noise(Vector((wx * 3.2, wz * 3.2, 0.5)))
-        if n_w > 0.35 or edge_t > 0.85:
-            col = lerp_color(col, c_water_foam, 0.25)
+        if edge_t < 0.55:
+            col = lerp_color(c_water_deep, c_water_mid, edge_t / 0.55)
+        else:
+            col = lerp_color(c_water_mid, c_water_shallow, (edge_t - 0.55) / 0.45)
+
+        n_w = noise.noise(Vector((wx * 3.0, wz * 3.0, 0.5)))
+        if n_w > 0.32 or edge_t > 0.84:
+            col = lerp_color(col, c_water_foam, 0.32)
         return col
 
     finalize_mesh_object("Stream_Water", bm_water, materials["stream_water"], water_color_fn)
 
-    # Handcrafted Arched Wooden Bridge + Stone & Timber Bank Abutments
+    # Handcrafted Arched Wooden Bridge spanning the widened creek (span = 1.44, 13 planks)
     bm_bridge = bmesh.new()
     bridge_center_z = stream_center_z(0.0)
-    bridge_span = 1.24
-    bridge_width = 1.02
-    num_planks = 11
+    bridge_span = 1.44
+    bridge_width = 1.04
+    num_planks = 13
 
     y_south_ground = get_terrain_height(0.0, bridge_center_z + bridge_span * 0.5)
     y_north_ground = get_terrain_height(0.0, bridge_center_z - bridge_span * 0.5)
-    base_abutment_y = max(y_south_ground, y_north_ground) + 0.03
+    base_abutment_y = max(y_south_ground, y_north_ground) + 0.025
 
     def arch_height(z_local):
         norm = z_local / (bridge_span * 0.5)
-        return base_abutment_y + 0.13 * max(0.0, 1.0 - norm * norm)
+        return base_abutment_y + 0.16 * max(0.0, 1.0 - norm * norm)
 
     # Timber sill beams embedded into both riverbanks at the bridge ends
     for end_sign in (-1.0, 1.0):
@@ -1143,8 +1194,8 @@ def build_stream_and_bridge(materials):
         add_beveled_box(
             bm_bridge,
             lambda co, wz_sill=wz_sill, wy_sill=wy_sill: Vector((
-                co.x * (bridge_width + 0.14),
-                -(wz_sill + co.y * 0.15),
+                co.x * (bridge_width + 0.16),
+                -(wz_sill + co.y * 0.16),
                 wy_sill + co.z * 0.11,
             )),
             bevel_offset=0.012,
@@ -1152,13 +1203,13 @@ def build_stream_and_bridge(materials):
         )
 
     # Two arched timber stringer beams spanning between the bank sills
-    for side in (-0.39, 0.39):
-        segs = 14
+    for side in (-0.40, 0.40):
+        segs = 16
         beam_verts = []
         for i in range(segs + 1):
             zl = -bridge_span * 0.50 + bridge_span * 1.00 * (i / segs)
             wz = bridge_center_z + zl
-            wy = arch_height(zl) - 0.038
+            wy = arch_height(zl) - 0.040
             beam_verts.append((side, wz, wy))
         for i in range(segs):
             x0, z0, y0 = beam_verts[i]
@@ -1166,23 +1217,23 @@ def build_stream_and_bridge(materials):
             ret = bmesh.ops.create_cube(bm_bridge, size=1.0)
             for v in ret["verts"]:
                 t = v.co.y + 0.5
-                vx = x0 + v.co.x * 0.088
+                vx = x0 + v.co.x * 0.090
                 vz = z0 * (1 - t) + z1 * t
-                vy = (y0 * (1 - t) + y1 * t) + v.co.z * 0.078
+                vy = (y0 * (1 - t) + y1 * t) + v.co.z * 0.080
                 v.co = Vector((vx, -vz, vy))
 
-    # 11 individual beveled oak deck planks with slight organic irregularity
+    # 13 individual beveled oak deck planks
     for ip in range(num_planks):
         u = (ip / (num_planks - 1)) * 2.0 - 1.0
         zl = u * (bridge_span * 0.45)
         wz = bridge_center_z + zl
         wy = arch_height(zl) + 0.018
-        slope = -0.21 * u
+        slope = -0.22 * u
         w_var = bridge_width * (0.99 + 0.02 * math.sin(ip * 2.3))
 
         def plank_tf(co, wz=wz, wy=wy, slope=slope, w_var=w_var):
             px = co.x * w_var
-            pz = co.y * 0.095
+            pz = co.y * 0.092
             py = co.z * 0.046
             rz = pz * math.cos(slope) - py * math.sin(slope)
             ry = pz * math.sin(slope) + py * math.cos(slope)
@@ -1190,9 +1241,9 @@ def build_stream_and_bridge(materials):
 
         add_beveled_box(bm_bridge, plank_tf, bevel_offset=0.009, segments=2)
 
-    # 6 vertical beveled posts with pyramid caps + curved double handrails
-    for side in (-0.46, 0.46):
-        for post_z_local in (-0.50, 0.0, 0.50):
+    # 6 vertical beveled posts + curved double handrails
+    for side in (-0.47, 0.47):
+        for post_z_local in (-0.58, 0.0, 0.58):
             wz = bridge_center_z + post_z_local
             wy = arch_height(post_z_local)
             add_beveled_box(
@@ -1207,12 +1258,12 @@ def build_stream_and_bridge(materials):
             )
 
         for rail_h, rail_thick in ((0.30, 0.048), (0.17, 0.032)):
-            segs = 12
+            segs = 14
             for i in range(segs):
                 u0 = (i / segs) * 2.0 - 1.0
                 u1 = ((i + 1) / segs) * 2.0 - 1.0
-                zl0 = u0 * 0.52
-                zl1 = u1 * 0.52
+                zl0 = u0 * 0.60
+                zl1 = u1 * 0.60
                 wy0 = arch_height(zl0) + rail_h
                 wy1 = arch_height(zl1) + rail_h
                 ret = bmesh.ops.create_cube(bm_bridge, size=1.0)
@@ -1238,16 +1289,14 @@ def build_stream_and_bridge(materials):
 
 
 # ==============================================================================
-# 4. ARTISANAL WOODEN SIGNPOSTS & HERO PROP WOODLAND MAILBOX
+# 4. ARTISANAL WOODEN SIGNPOSTS ('Design Path' & 'Play Path') + HERO MAILBOX
 # ==============================================================================
 
 def build_signpost(name, label_text, x, z, yaw_deg, arrow_dir, materials):
     """
     Handcrafted woodland wayfinding signpost:
-    - Tapered chamfered oak post with pyramid weather-cap & stone-and-timber base collar
-    - Wrought-iron mounting brackets
-    - Beveled oak directional plaque with recessed inner border molding
-    - Subtle low-relief chiseled lettering (refined, not puffy balloon text)
+    - Left sign: 'Design Path'
+    - Right sign: 'Play Path'
     """
     y_ground = get_terrain_height(x, z)
     yaw = math.radians(yaw_deg)
@@ -1259,7 +1308,6 @@ def build_signpost(name, label_text, x, z, yaw_deg, arrow_dir, materials):
         return Vector((wx, -wz, wy))
 
     bm_post = bmesh.new()
-    # Tapered chamfered oak post
     add_beveled_box(
         bm_post,
         lambda co: to_world(
@@ -1271,13 +1319,11 @@ def build_signpost(name, label_text, x, z, yaw_deg, arrow_dir, materials):
         segments=2,
     )
 
-    # Stepped pyramid weather cap
     ret_cap = bmesh.ops.create_cube(bm_post, size=1.0)
     for v in ret_cap["verts"]:
         t_top = 0.50 if v.co.z > 0 else 1.22
         v.co = to_world(v.co.x * 0.20 * t_top, 1.55 + v.co.z * 0.11, v.co.y * 0.20 * t_top)
 
-    # Base mortised timber collar + diagonal foot braces
     add_beveled_box(
         bm_post,
         lambda co: to_world(co.x * 0.26, 0.08 + co.z * 0.16, co.y * 0.26),
@@ -1285,7 +1331,6 @@ def build_signpost(name, label_text, x, z, yaw_deg, arrow_dir, materials):
         segments=2,
     )
 
-    # Wrought-iron mounting straps wrapping the post at signboard height
     for strap_y in (1.02, 1.28):
         add_beveled_box(
             bm_post,
@@ -1305,16 +1350,14 @@ def build_signpost(name, label_text, x, z, yaw_deg, arrow_dir, materials):
         ),
     )
 
-    # Handcrafted beveled directional wooden signboard with outer molding rails
     bm_board = bmesh.new()
-    board_w = 1.62
-    board_h = 0.45
+    board_w = 1.56
+    board_h = 0.44
     board_d = 0.092
     board_y = 1.15
 
     def board_tf(co):
         lx = co.x * board_w
-        # Subtle organic top/bottom wave so the plank feels hand-hewn
         wave = 0.008 * math.sin(lx * 3.5)
         ly = board_y + co.z * board_h + wave
         lz = 0.105 + co.y * board_d
@@ -1328,14 +1371,13 @@ def build_signpost(name, label_text, x, z, yaw_deg, arrow_dir, materials):
 
     add_beveled_box(bm_board, board_tf, bevel_offset=0.015, segments=3)
 
-    # Top and bottom chamfered frame trim bars along the non-pointed section of the signboard
-    for trim_z in (-0.21, 0.21):
-        trim_x_shift = 0.12 if arrow_dir < 0 else -0.12
+    for trim_z in (-0.205, 0.205):
+        trim_x_shift = 0.11 if arrow_dir < 0 else -0.11
         add_beveled_box(
             bm_board,
             lambda co, tz=trim_z, txs=trim_x_shift: to_world(
-                txs + co.x * 1.18,
-                board_y + tz + co.z * 0.042,
+                txs + co.x * 1.14,
+                board_y + tz + co.z * 0.040,
                 0.115 + co.y * 0.115,
             ),
             bevel_offset=0.006,
@@ -1353,17 +1395,16 @@ def build_signpost(name, label_text, x, z, yaw_deg, arrow_dir, materials):
         ),
     )
 
-    # Refined, crisp chiseled wayfinding lettering (slim profile, balanced proportion)
     bpy.ops.object.text_add(location=(0, 0, 0))
     txt_obj = bpy.context.active_object
     txt_obj.name = f"{name}_Label3D"
     txt_obj.data.body = label_text
     txt_obj.data.align_x = 'CENTER'
     txt_obj.data.align_y = 'CENTER'
-    txt_obj.data.size = 0.188
-    txt_obj.data.space_character = 1.04
-    txt_obj.data.extrude = 0.012
-    txt_obj.data.bevel_depth = 0.0018
+    txt_obj.data.size = 0.202
+    txt_obj.data.space_character = 1.05
+    txt_obj.data.extrude = 0.013
+    txt_obj.data.bevel_depth = 0.0020
     txt_obj.data.bevel_resolution = 1
 
     bpy.ops.object.convert(target='MESH')
@@ -1380,13 +1421,6 @@ def build_signpost(name, label_text, x, z, yaw_deg, arrow_dir, materials):
 
 
 def build_woodland_mailbox(x, z, yaw_deg, materials):
-    """
-    Hero Prop Woodland Mailbox positioned on its dedicated cobblestone alcove at (1.18, y, 1.08):
-    - Chamfered oak post with curved corbel brace & iron base collar
-    - Arched forest-green body with raised brass end-straps & rolled roof overhang
-    - Articulated brass front door with bottom hinge barrel, louver slot, and turned pull knob
-    - Emerging folded cream letter with wax seal & pivoted brass signal flag
-    """
     y_ground = get_terrain_height(x, z)
     yaw = math.radians(yaw_deg)
 
@@ -1396,7 +1430,6 @@ def build_woodland_mailbox(x, z, yaw_deg, materials):
         wy = y_ground + ly
         return Vector((wx, -wz, wy))
 
-    # 1. Chamfered oak post + curved corbel brace + molded shelf
     bm_post = bmesh.new()
     add_beveled_box(
         bm_post,
@@ -1404,14 +1437,12 @@ def build_woodland_mailbox(x, z, yaw_deg, materials):
         bevel_offset=0.015,
         segments=2,
     )
-    # Molded oak mounting tray
     add_beveled_box(
         bm_post,
         lambda co: to_world(co.x * 0.46, 0.91 + co.z * 0.065, co.y * 0.60),
         bevel_offset=0.012,
         segments=2,
     )
-    # Front diagonal corbel support brace under the tray
     add_beveled_box(
         bm_post,
         lambda co: to_world(
@@ -1422,7 +1453,6 @@ def build_woodland_mailbox(x, z, yaw_deg, materials):
         bevel_offset=0.008,
         segments=2,
     )
-    # Base collar
     add_beveled_box(
         bm_post,
         lambda co: to_world(co.x * 0.24, 0.07 + co.z * 0.14, co.y * 0.24),
@@ -1441,7 +1471,6 @@ def build_woodland_mailbox(x, z, yaw_deg, materials):
         ),
     )
 
-    # 2. Rounded arched vintage mailbox body with rolled roof overhang
     bm_body = bmesh.new()
     segs_arch = 24
     segs_len = 10
@@ -1461,7 +1490,6 @@ def build_woodland_mailbox(x, z, yaw_deg, materials):
     rings = []
     for il in range(segs_len + 1):
         lz = -mb_l * 0.5 + mb_l * (il / segs_len)
-        # Subtle decorative end-band swell at front and back ribs
         rib_swell = 1.035 if il in (0, 1, segs_len - 1, segs_len) else 1.0
         row = []
         for px, py in profile_pts:
@@ -1489,7 +1517,6 @@ def build_woodland_mailbox(x, z, yaw_deg, materials):
         lambda wx, wy, wz, nx, ny, nz: lerp_color(c_mb_dark, c_mb_top, 0.4 + 0.5 * max(0.0, ny)),
     )
 
-    # 3. Articulated Brass Front Door with hinge barrel, embossed mail slot, and pull handle knob
     bm_door = bmesh.new()
     door_thick = 0.038
     door_tilt = math.radians(22.0)
@@ -1515,7 +1542,6 @@ def build_woodland_mailbox(x, z, yaw_deg, materials):
     bm_door.faces.new(front_ring)
     bm_door.faces.new(back_ring[::-1])
 
-    # Turned brass pull handle & mail slot hood on the front of the door
     add_beveled_box(
         bm_door,
         lambda co: door_point(co.x * 0.11, mb_h * 0.74 + co.z * 0.035, door_thick + 0.025 + co.y * 0.035),
@@ -1528,10 +1554,8 @@ def build_woodland_mailbox(x, z, yaw_deg, materials):
         bevel_offset=0.004,
         segments=1,
     )
-
     finalize_mesh_object("Mailbox_Door", bm_door, materials["champagne_brass"])
 
-    # 4. Emerging folded cream-linen letter peeking out of the mailbox opening
     bm_letter = bmesh.new()
     add_beveled_box(
         bm_letter,
@@ -1541,7 +1565,6 @@ def build_woodland_mailbox(x, z, yaw_deg, materials):
     )
     finalize_mesh_object("Mailbox_Letter", bm_letter, materials["ivory_lettering"])
 
-    # 5. Raised side brass signal flag with pivot boss
     bm_flag = bmesh.new()
     add_beveled_box(
         bm_flag,
@@ -1559,33 +1582,32 @@ def build_woodland_mailbox(x, z, yaw_deg, materials):
 
 
 # ==============================================================================
-# 5. DIVERSE BOTANICAL GROUND VEGETATION & SCULPTED BOULDERS
+# 5. PURPOSEFULLY CLUSTERED BOTANICAL VEGETATION & CREEK BANK STONES
 # ==============================================================================
 
 def build_rocks_and_botanical_groundcover(materials):
     """
-    Replaces repetitive geometric ground blobs with:
-    - Chiseled mossy boulders & creek bank stones
-    - Asymmetric pinnate fern fronds + multi-blade 3D grass clumps
-    - Stemmed wildflower clusters with multi-petal blossoms
+    Purposefully clustered rocks, ferns, varied-scale 3D grass clumps, and wildflowers
+    anchored naturally around creek banks, boulders, sign bases, and bridge abutments.
     """
     bm_rocks = bmesh.new()
     rock_placements = [
         # NW spring headwater grotto boulders
-        (-3.68, -0.55, 0.44, 0.32, 0.36), (-3.38, -0.15, 0.32, 0.24, 0.28), (-3.50, -0.95, 0.36, 0.28, 0.30),
+        (-3.68, -0.58, 0.46, 0.33, 0.38), (-3.32, -0.10, 0.34, 0.25, 0.30), (-3.48, -0.98, 0.38, 0.28, 0.32),
         # SE cascade rocks
-        (3.48, 0.96, 0.42, 0.30, 0.35), (3.20, 0.56, 0.30, 0.22, 0.26),
-        # Creek bank & bridge wing-wall stones
-        (-2.25, 0.24, 0.28, 0.20, 0.24), (-1.28, -0.04, 0.25, 0.18, 0.22),
-        (-0.56, 0.44, 0.24, 0.19, 0.22), (0.58, 0.06, 0.24, 0.18, 0.22),
-        (-0.58, 0.08, 0.22, 0.17, 0.20), (0.56, 0.46, 0.23, 0.18, 0.21),
-        (1.52, 0.54, 0.26, 0.19, 0.22), (2.38, 0.80, 0.32, 0.22, 0.26),
+        (3.46, 1.02, 0.42, 0.30, 0.35), (3.16, 0.54, 0.30, 0.22, 0.26),
+        # Creek bank & bridge wing-wall stones flanking the widened stream
+        (-2.22, 0.36, 0.30, 0.21, 0.25), (-1.32, 0.12, 0.26, 0.18, 0.22),
+        (-0.62, 0.62, 0.26, 0.20, 0.23), (0.64, -0.08, 0.25, 0.18, 0.22),
+        (-0.64, -0.14, 0.24, 0.18, 0.21), (0.62, 0.64, 0.25, 0.19, 0.22),
+        (1.62, 0.72, 0.28, 0.20, 0.24), (2.42, 0.92, 0.33, 0.23, 0.27),
         # Submerged creek bed cobbles
-        (-1.85, -0.05, 0.18, 0.10, 0.15), (-0.85, 0.15, 0.16, 0.09, 0.14),
-        (0.95, 0.38, 0.17, 0.10, 0.15), (1.85, 0.62, 0.19, 0.11, 0.16),
-        # Signpost, mailbox, and background ridge boulders
-        (-1.92, -0.72, 0.26, 0.20, 0.22), (1.92, -0.68, 0.26, 0.20, 0.22),
-        (1.42, 1.12, 0.20, 0.15, 0.18), (-0.15, -2.18, 0.38, 0.26, 0.30),
+        (-1.85, -0.06, 0.20, 0.10, 0.16), (-0.82, 0.14, 0.18, 0.09, 0.15),
+        (0.88, 0.35, 0.19, 0.10, 0.16), (1.88, 0.58, 0.21, 0.11, 0.17),
+        # Foreground left knoll outcrop & signpost/mailbox anchor stones
+        (-1.68, 1.52, 0.32, 0.21, 0.25), (-1.42, 1.66, 0.22, 0.15, 0.18),
+        (-1.92, -0.74, 0.26, 0.20, 0.22), (1.92, -0.70, 0.26, 0.20, 0.22),
+        (1.46, 1.18, 0.22, 0.16, 0.19), (-0.15, -2.18, 0.38, 0.26, 0.30),
         (0.32, -2.35, 0.28, 0.20, 0.24), (-2.85, -1.55, 0.36, 0.25, 0.30),
         (2.85, -1.50, 0.35, 0.24, 0.29),
     ]
@@ -1596,7 +1618,6 @@ def build_rocks_and_botanical_groundcover(materials):
         for v in ret["verts"]:
             p = v.co
             n = noise.noise(Vector((p.x * 2.3 + idx, p.y * 2.3 - idx, p.z * 2.3)))
-            # Stylize rocks with planar beveled faces
             facet = 1.0 + 0.24 * n - 0.10 * abs(p.z) - 0.08 * abs(p.x - p.y)
             lx = p.x * sx * facet
             lz = p.y * sz_r * facet
@@ -1617,19 +1638,19 @@ def build_rocks_and_botanical_groundcover(materials):
 
     finalize_mesh_object("Environment_Rocks", bm_rocks, materials["stone_mossy"], boulder_color_fn)
 
-    # Botanical Ferns + Multi-Blade 3D Grass Clumps + Moss Cushions (combined in Forest_Ferns)
+    # Purposefully Clustered Ferns + Varied-Scale 3D Grass Tufts + Creek Lily Pads
     bm_foliage_ground = bmesh.new()
 
-    # 1) Asymmetric Woodland Fern Rosettes
     fern_clusters = [
-        (-2.35, 1.15, 0.36, 7), (-1.55, 1.48, 0.26, 5), (1.72, 1.45, 0.30, 6),
-        (2.48, 1.18, 0.34, 7), (-2.62, -0.38, 0.38, 8), (2.62, -0.28, 0.35, 7),
-        (-0.88, -1.58, 0.32, 6), (0.88, -1.55, 0.30, 6), (-0.18, -1.95, 0.36, 7),
-        (-1.82, -0.52, 0.25, 5), (1.82, -0.48, 0.25, 5), (1.38, 0.92, 0.24, 5),
-        (-0.78, 0.65, 0.24, 5), (0.76, 0.58, 0.22, 5),
+        # Anchored beside the foreground left stone outcrop & creek banks
+        (-1.88, 1.38, 0.36, 7), (-1.32, 1.72, 0.24, 5), (-2.38, 0.58, 0.34, 6),
+        (1.68, 1.32, 0.30, 6), (2.48, 1.12, 0.34, 7), (-2.62, -0.45, 0.38, 8),
+        (2.62, -0.28, 0.35, 7), (-0.88, -1.58, 0.32, 6), (0.88, -1.55, 0.30, 6),
+        (-0.18, -1.95, 0.36, 7), (-1.82, -0.56, 0.26, 6), (1.82, -0.52, 0.26, 6),
+        (1.42, 0.96, 0.24, 5), (-0.76, 0.72, 0.25, 5), (0.76, 0.70, 0.23, 5),
     ]
     for c_idx, (fx, fz, f_scale, num_fronds) in enumerate(fern_clusters):
-        fy = get_terrain_height(fx, fz) - 0.01
+        fy = get_terrain_height(fx, fz) - 0.015
         for ifr in range(num_fronds):
             ang = (2.0 * math.pi * ifr) / num_fronds + (c_idx * 0.53) + 0.18 * math.sin(ifr * 2.1)
             frond_len = f_scale * (0.75 + 0.35 * ((ifr * 3 + c_idx) % 4) / 3.0)
@@ -1640,7 +1661,6 @@ def build_rocks_and_botanical_groundcover(materials):
                 t = iseg / segs
                 r = frond_len * t
                 arch_y = fy + f_scale * (0.44 * math.sin(t * math.pi * droop))
-                # Pinnate scalloped frond width profile
                 w = f_scale * 0.20 * math.sin(t * math.pi) * (0.85 + 0.15 * math.sin(t * 18.0))
                 wx = fx + math.cos(ang) * r
                 wz = fz + math.sin(ang) * r
@@ -1656,47 +1676,55 @@ def build_rocks_and_botanical_groundcover(materials):
                 bm_foliage_ground.faces.new((l0, m0, m1, l1))
                 bm_foliage_ground.faces.new((m0, r0, r1, m1))
 
-    # 2) Diverse Multi-Blade 3D Grass Clumps scattered naturally across meadow & path margins
-    grass_spots = [
-        (-0.52, 2.05, 0.22), (0.48, 1.92, 0.20), (-0.46, 1.42, 0.19), (0.46, 1.38, 0.18),
-        (-1.12, 0.95, 0.24), (-1.85, 0.72, 0.26), (1.68, 0.92, 0.23), (2.15, 1.42, 0.25),
-        (-2.15, 1.55, 0.25), (-1.15, -0.35, 0.20), (1.15, -0.35, 0.20), (-0.52, -0.82, 0.21),
-        (0.52, -0.82, 0.21), (-2.15, -0.88, 0.24), (2.15, -0.84, 0.24), (-1.45, -1.45, 0.25),
-        (1.45, -1.42, 0.25), (0.28, -1.35, 0.22), (-0.32, -1.25, 0.20), (1.05, 1.35, 0.19),
-        (-2.95, 0.45, 0.26), (2.95, 0.35, 0.26), (-0.85, 1.85, 0.22), (0.85, 1.78, 0.21),
+    # Purposefully grouped grass families (parent clump + 2 smaller satellite tufts at varied scales)
+    grass_anchor_families = [
+        # (anchor_x, anchor_z, base_scale)
+        (-1.48, 1.38, 0.26), (-0.58, 0.82, 0.22), (0.56, 0.84, 0.21),
+        (-1.22, 0.34, 0.25), (1.35, 0.84, 0.24), (1.52, 1.24, 0.22),
+        (-1.72, -0.48, 0.23), (1.72, -0.44, 0.23), (-0.72, -0.35, 0.20),
+        (0.72, -0.35, 0.20), (-0.42, -1.28, 0.22), (0.42, -1.25, 0.22),
+        (-2.22, -0.88, 0.25), (2.22, -0.84, 0.25), (-0.46, 1.92, 0.19),
+        (0.46, 1.85, 0.18),
     ]
-    for g_idx, (gx, gz, g_scale) in enumerate(grass_spots):
-        gy = get_terrain_height(gx, gz) - 0.01
-        num_blades = 7 + (g_idx % 4)
-        for ib in range(num_blades):
-            ang = (2.0 * math.pi * ib) / num_blades + g_idx * 0.71
-            offset_r = 0.04 + 0.05 * ((ib % 3) * 0.5)
-            bx0 = gx + math.cos(ang) * offset_r
-            bz0 = gz + math.sin(ang) * offset_r
-            blade_h = g_scale * (0.75 + 0.45 * ((ib * 5 + g_idx) % 4) / 3.0)
-            lean_r = blade_h * (0.38 + 0.22 * ((ib % 2)))
-            blade_w = 0.028 * (0.85 + 0.3 * (ib % 2))
-            nx_d, nz_d = -math.sin(ang), math.cos(ang)
+    for fam_idx, (ax, az, b_scale) in enumerate(grass_anchor_families):
+        sub_tufts = [
+            (0.0, 0.0, b_scale * 1.15),
+            (0.14 * math.cos(fam_idx * 1.7), 0.14 * math.sin(fam_idx * 1.7), b_scale * 0.78),
+            (-0.12 * math.sin(fam_idx * 2.3), 0.12 * math.cos(fam_idx * 2.3), b_scale * 0.58),
+        ]
+        for s_idx, (dx, dz, g_scale) in enumerate(sub_tufts):
+            gx, gz = ax + dx, az + dz
+            gy = get_terrain_height(gx, gz) - 0.015
+            num_blades = 6 + ((fam_idx + s_idx) % 4)
+            for ib in range(num_blades):
+                ang = (2.0 * math.pi * ib) / num_blades + fam_idx * 0.71 + s_idx * 1.1
+                offset_r = 0.025 + 0.035 * ((ib % 3) * 0.5)
+                bx0 = gx + math.cos(ang) * offset_r
+                bz0 = gz + math.sin(ang) * offset_r
+                blade_h = g_scale * (0.72 + 0.48 * ((ib * 5 + fam_idx) % 4) / 3.0)
+                lean_r = blade_h * (0.36 + 0.22 * (ib % 2))
+                blade_w = 0.024 * (0.82 + 0.32 * (ib % 2))
+                nx_d, nz_d = -math.sin(ang), math.cos(ang)
 
-            segs_b = 4
-            b_rows = []
-            for iseg in range(segs_b + 1):
-                t = iseg / segs_b
-                r = lean_r * (t ** 1.45)
-                by = gy + blade_h * math.sin(t * math.pi * 0.52)
-                w = blade_w * (1.0 - 0.88 * (t ** 1.2))
-                wx = bx0 + math.cos(ang) * r
-                wz = bz0 + math.sin(ang) * r
-                b_rows.append((
-                    bm_foliage_ground.verts.new((wx - nx_d * w, -(wz - nz_d * w), by)),
-                    bm_foliage_ground.verts.new((wx + nx_d * w, -(wz + nz_d * w), by)),
-                ))
-            for iseg in range(segs_b):
-                v0l, v0r = b_rows[iseg]
-                v1l, v1r = b_rows[iseg + 1]
-                bm_foliage_ground.faces.new((v0l, v0r, v1r, v1l))
+                segs_b = 4
+                b_rows = []
+                for iseg in range(segs_b + 1):
+                    t = iseg / segs_b
+                    r = lean_r * (t ** 1.45)
+                    by = gy + blade_h * math.sin(t * math.pi * 0.52)
+                    w = blade_w * (1.0 - 0.88 * (t ** 1.2))
+                    wx = bx0 + math.cos(ang) * r
+                    wz = bz0 + math.sin(ang) * r
+                    b_rows.append((
+                        bm_foliage_ground.verts.new((wx - nx_d * w, -(wz - nz_d * w), by)),
+                        bm_foliage_ground.verts.new((wx + nx_d * w, -(wz + nz_d * w), by)),
+                    ))
+                for iseg in range(segs_b):
+                    v0l, v0r = b_rows[iseg]
+                    v1l, v1r = b_rows[iseg + 1]
+                    bm_foliage_ground.faces.new((v0l, v0r, v1r, v1l))
 
-    c_fern_base = hex_to_rgba("#244730")
+    c_fern_base = hex_to_rgba("#22452E")
     c_fern_tip = hex_to_rgba("#769C5E")
 
     def ground_foliage_color_fn(wx, wy, wz, nx, ny, nz):
@@ -1707,27 +1735,25 @@ def build_rocks_and_botanical_groundcover(materials):
 
     finalize_mesh_object("Forest_Ferns", bm_foliage_ground, materials["foliage_moss"], ground_foliage_color_fn)
 
-    # 3) Botanical Wildflower Clusters with Stems & Multi-Petal Blossoms (not polka-dot spheres!)
+    # Purposefully Clustered Wildflower Patches anchored beside boulders & posts
     bm_flowers = bmesh.new()
     flower_clusters = [
-        # Tucked naturally beside rocks, signposts, and meadow clusters
-        (-1.76, -0.54, 4), (-1.34, -0.78, 3), (1.76, -0.50, 4), (1.36, -0.74, 3),
-        (1.36, 1.22, 4), (0.98, 0.94, 3), (-0.72, 1.52, 4), (0.64, 1.72, 3),
-        (-2.05, 1.02, 4), (2.05, 1.28, 4), (-0.38, -1.62, 3), (0.42, -1.52, 3),
+        (-1.76, -0.56, 4), (-1.48, 1.36, 4), (1.76, -0.52, 4),
+        (1.38, 1.20, 4), (-0.64, 0.76, 3), (0.64, 0.78, 3),
+        (-0.38, -1.62, 3), (0.42, -1.52, 3),
     ]
     for idx, (cx, cz, count) in enumerate(flower_clusters):
         for sub in range(count):
             ang_s = idx * 1.9 + sub * 2.15
-            rad_s = 0.06 + 0.07 * (sub % 3)
+            rad_s = 0.05 + 0.055 * (sub % 3)
             fx = cx + math.cos(ang_s) * rad_s
             fz = cz + math.sin(ang_s) * rad_s
-            fy = get_terrain_height(fx, fz) + 0.045 + 0.018 * (sub % 2)
-            # 4-petal tiny blossom cluster
+            fy = get_terrain_height(fx, fz) + 0.042 + 0.016 * (sub % 2)
             for ip in range(4):
                 p_ang = (math.pi * 0.5) * ip + sub * 0.4
-                px = fx + math.cos(p_ang) * 0.022
-                pz = fz + math.sin(p_ang) * 0.022
-                ret = bmesh.ops.create_icosphere(bm_flowers, subdivisions=1, radius=0.022)
+                px = fx + math.cos(p_ang) * 0.020
+                pz = fz + math.sin(p_ang) * 0.020
+                ret = bmesh.ops.create_icosphere(bm_flowers, subdivisions=1, radius=0.020)
                 for v in ret["verts"]:
                     v.co = Vector((px + v.co.x, -(pz + v.co.y), fy + v.co.z * 0.55))
 
@@ -1786,11 +1812,11 @@ def setup_lighting_and_render_previews():
         rot_quat = direction.to_track_quat('-Z', 'Y')
         cam_obj.rotation_euler = rot_quat.to_euler()
 
-    aim_camera((-0.35, -12.6, 7.1), (0.0, 0.0, 0.42))
+    aim_camera((-0.35, -12.6, 7.1), (0.0, 0.0, 0.35))
     scene.render.filepath = os.path.join(RENDER_DIR, "blender_view_initial.png")
     bpy.ops.render.render(write_still=True)
 
-    aim_camera((5.2, -11.6, 7.3), (-0.05, 0.0, 0.42))
+    aim_camera((5.2, -11.6, 7.3), (-0.05, 0.0, 0.35))
     scene.render.filepath = os.path.join(RENDER_DIR, "blender_view_rotated.png")
     bpy.ops.render.render(write_still=True)
 
@@ -1816,7 +1842,7 @@ def main():
         "pathway_earth": make_pbr_material("Pathway_Earth_Mat", "#BC9E76", roughness=0.85),
         "stone_warm": make_pbr_material("Stone_Warm_Mat", "#928A7F", roughness=0.76),
         "stone_mossy": make_pbr_material("Stone_Mossy_Mat", "#646F5E", roughness=0.79),
-        "stream_water": make_pbr_material("Stream_Water_Mat", "#2E5E57", roughness=0.22, metallic=0.04),
+        "stream_water": make_pbr_material("Stream_Water_Mat", "#2E6A63", roughness=0.20, metallic=0.06),
         "wood_oak": make_pbr_material("Wood_Oak_Mat", "#9D6E48", roughness=0.66),
         "wood_post": make_pbr_material("Wood_Post_Mat", "#784F30", roughness=0.70),
         "wood_sign_plaque": make_pbr_material("Wood_Sign_Plaque_Mat", "#54331C", roughness=0.60),
@@ -1824,19 +1850,18 @@ def main():
         "foliage_deep": make_pbr_material("Foliage_Deep_Mat", "#26543F", roughness=0.74),
         "foliage_moss": make_pbr_material("Foliage_Moss_Mat", "#4E724A", roughness=0.75),
         "foliage_sage": make_pbr_material("Foliage_Sage_Mat", "#73916C", roughness=0.76),
-        "ivory_lettering": make_pbr_material("Ivory_Lettering_Mat", "#F4EFE3", roughness=0.38, use_vertex_color=False),
-        "mailbox_forest_metal": make_pbr_material("Mailbox_Forest_Metal_Mat", "#1E493B", roughness=0.38, metallic=0.24),
-        "champagne_brass": make_pbr_material("Champagne_Brass_Mat", "#DCC89A", roughness=0.30, metallic=0.72, use_vertex_color=False),
+        "ivory_lettering": make_pbr_material("Ivory_Lettering_Mat", "#F5EFE3", roughness=0.36, use_vertex_color=False),
+        "mailbox_forest_metal": make_pbr_material("Mailbox_Forest_Metal_Mat", "#1C4537", roughness=0.38, metallic=0.26, use_vertex_color=False),
+        "champagne_brass": make_pbr_material("Champagne_Brass_Mat", "#DCC89A", roughness=0.28, metallic=0.74, use_vertex_color=False),
     }
 
     build_island_terrain(materials)
+    build_embedded_identity_plaque(materials)
     build_pathway_and_cobbles(materials)
     build_stream_and_bridge(materials)
     build_rocks_and_botanical_groundcover(materials)
 
     # Spatial Hierarchy & Layered Composition of 7 Varied Trees across 3 Archetypes
-    # Notice: Deliberate open negative space in the center-north (-0.8 to +0.8) so trees frame
-    # rather than form a flat wall, with strong height & silhouette contrast!
     create_tree_archetype_oak("Tree_NW_Hero", -2.55, -2.05, 1.24, -0.18, -0.10, 0, materials)
     create_tree_archetype_cedar("Tree_N_Left", -1.35, -2.55, 1.18, -0.06, -0.08, 2, materials)
     create_tree_archetype_birch("Tree_N_Center", 0.92, -2.48, 0.94, 0.14, -0.08, 1, materials)
@@ -1845,10 +1870,10 @@ def main():
     create_tree_archetype_birch("Tree_W_Flank", -3.22, -0.65, 0.90, -0.20, 0.06, 1, materials)
     create_tree_archetype_cedar("Tree_E_Flank", 3.18, -0.28, 0.84, 0.16, 0.08, 0, materials)
 
-    # Interactive Hero Props
-    build_signpost("Signpost_UX", "UX Portfolio", -1.58, -0.62, 18.0, -1, materials)
-    build_signpost("Signpost_Game", "Game Portfolio", 1.58, -0.58, -18.0, 1, materials)
-    build_woodland_mailbox(1.18, 1.08, -22.0, materials)
+    # Renamed Interactive 3D Wooden Signposts ('Design Path' & 'Play Path') + Hero Mailbox
+    build_signpost("Signpost_UX", "Design Path", -1.58, -0.64, 18.0, -1, materials)
+    build_signpost("Signpost_Game", "Play Path", 1.58, -0.60, -18.0, 1, materials)
+    build_woodland_mailbox(1.18, 1.14, -22.0, materials)
 
     print_mesh_statistics()
 
@@ -1861,11 +1886,11 @@ def main():
         export_cameras=False,
         export_lights=False,
     )
-    print(f"Exported V2 runtime GLB to: {GLB_OUT}")
+    print(f"Exported V3 runtime GLB to: {GLB_OUT}")
 
     setup_lighting_and_render_previews()
     bpy.ops.wm.save_as_mainfile(filepath=BLEND_OUT)
-    print(f"Saved V2 master Blender source to: {BLEND_OUT}")
+    print(f"Saved V3 master Blender source to: {BLEND_OUT}")
 
 
 if __name__ == "__main__":
