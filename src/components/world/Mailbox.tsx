@@ -40,10 +40,9 @@ export const Mailbox: React.FC<MailboxProps> = ({
         bumpScale: 0.018,
       }),
       body: new THREE.MeshStandardMaterial({
-        color: '#ffffff',
-        vertexColors: true,
-        roughness: 0.38,
-        metalness: 0.25,
+        color: '#1E4A3B',
+        roughness: 0.36,
+        metalness: 0.26,
       }),
       brass: new THREE.MeshStandardMaterial({
         color: '#E0CB9B',
@@ -198,7 +197,7 @@ export const Mailbox: React.FC<MailboxProps> = ({
 
       {/* Compact, artisanal engraved brass nameplate mounted neatly below the corbel brace */}
       <group
-        position={[1.11, 0.62, 1.24]}
+        position={[1.08, 0.55, 1.33]}
         rotation={[-0.06, THREE.MathUtils.degToRad(-22), 0]}
       >
         <mesh castShadow={shadows}>
