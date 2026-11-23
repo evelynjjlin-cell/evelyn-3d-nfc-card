@@ -56,7 +56,7 @@ export const ForestEnvironment: React.FC<ForestEnvironmentProps> = ({
       />
 
       {/* Sculpted Floating Forest Diorama */}
-      <group position={[0, -0.1, 0]}>
+      <group position={[0, -0.32, 0]}>
         <Terrain nodes={gltf.nodes} shadows={quality.shadows} />
         <Stream nodes={gltf.nodes} enableWaterShader={quality.enableWaterShader} />
         <Bridge nodes={gltf.nodes} shadows={quality.shadows} />

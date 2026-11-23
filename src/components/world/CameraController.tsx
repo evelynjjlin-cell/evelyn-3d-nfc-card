@@ -51,6 +51,16 @@ export const CameraController: React.FC<CameraControllerProps> = ({
       preset.target[2]
     );
     isTransitioning.current = true;
+
+    // On initial mount or viewport resize before user interaction, snap camera immediately
+    if (!userInteracting.current && controlsRef.current) {
+      const sph = new THREE.Spherical(dist, preset.polar, preset.azimuth);
+      const offset = new THREE.Vector3().setFromSpherical(sph);
+      controlsRef.current.target.copy(targetGoal.current);
+      camera.position.copy(targetGoal.current).add(offset);
+      camera.lookAt(targetGoal.current);
+      controlsRef.current.update();
+    }
   }, [activePreset, size.width, size.height, isPortraitMobile]);
 
   // Apply initial camera position immediately on first mount so the very first frame is composed

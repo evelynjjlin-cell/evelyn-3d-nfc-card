@@ -576,24 +576,24 @@ body,
 /* Desktop layout adaptation */
 @media (min-width: 820px) {
   .overlay-container {
-    padding: 22px 28px;
+    padding: 18px 26px;
   }
 
   .identity-editorial {
-    max-width: 390px;
-    padding: 8px 14px 10px;
+    max-width: 305px;
+    padding: 4px 10px 6px;
   }
 
   .identity-name {
-    font-size: 2.15rem;
+    font-size: 1.95rem;
   }
 
   .identity-title {
-    font-size: 0.74rem;
+    font-size: 0.68rem;
   }
 
   .identity-tagline {
-    font-size: 0.8rem;
+    font-size: 0.75rem;
   }
 
   .compact-nav-pill {

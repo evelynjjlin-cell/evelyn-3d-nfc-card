@@ -163,8 +163,8 @@ export const PERSONAL_CONFIG: PersonalConfig = {
       azimuth: -0.05,
       polar: 1.03,
       distanceMobile: 18.4,
-      distanceDesktop: 12.1,
-      target: [0, 0.42, 0.05],
+      distanceDesktop: 13.5,
+      target: [0, 0.62, 0.05],
     },
     rotated: {
       id: 'rotated',
@@ -172,8 +172,8 @@ export const PERSONAL_CONFIG: PersonalConfig = {
       azimuth: 0.38,
       polar: 0.99,
       distanceMobile: 18.8,
-      distanceDesktop: 12.3,
-      target: [-0.06, 0.42, 0.04],
+      distanceDesktop: 13.7,
+      target: [-0.06, 0.62, 0.04],
     },
     uxSign: {
       id: 'uxSign',
@@ -205,11 +205,11 @@ export const PERSONAL_CONFIG: PersonalConfig = {
     closeupTrees: {
       id: 'closeupTrees',
       label: 'Foliage & Trees Close-up',
-      azimuth: -0.24,
-      polar: 1.08,
-      distanceMobile: 9.6,
-      distanceDesktop: 7.4,
-      target: [-1.45, 1.65, -1.65],
+      azimuth: -0.18,
+      polar: 1.12,
+      distanceMobile: 8.6,
+      distanceDesktop: 6.8,
+      target: [-1.15, 1.35, -1.55],
     },
     closeupProps: {
       id: 'closeupProps',
@@ -218,7 +218,7 @@ export const PERSONAL_CONFIG: PersonalConfig = {
       polar: 1.06,
       distanceMobile: 8.8,
       distanceDesktop: 6.4,
-      target: [0.68, 0.96, 0.32],
+      target: [0.35, 0.78, 0.25],
     },
   },
 };
