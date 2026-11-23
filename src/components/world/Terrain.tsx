@@ -11,6 +11,34 @@ export const Terrain: React.FC<TerrainProps> = ({ nodes, shadows }) => {
   const grassBump = useMemo(() => getGrassBumpTexture(), []);
 
   const materials = useMemo(() => {
+    const cobblesNode = nodes['Pathway_Cobbles'] as THREE.Mesh | undefined;
+    const rawCobbleMat = cobblesNode?.material;
+    const baseCobble = Array.isArray(rawCobbleMat) ? rawCobbleMat[0] : rawCobbleMat;
+    let pathwayCobblesMat: THREE.MeshStandardMaterial;
+
+    if (baseCobble && (baseCobble as THREE.MeshStandardMaterial).isMeshStandardMaterial) {
+      pathwayCobblesMat = (baseCobble as THREE.MeshStandardMaterial).clone();
+      pathwayCobblesMat.roughness = 0.78;
+      pathwayCobblesMat.metalness = 0.02;
+      pathwayCobblesMat.transparent = false;
+      pathwayCobblesMat.depthWrite = true;
+      pathwayCobblesMat.depthTest = true;
+      pathwayCobblesMat.side = THREE.FrontSide;
+      pathwayCobblesMat.vertexColors = false;
+      if (pathwayCobblesMat.map) {
+        pathwayCobblesMat.map.anisotropy = 8;
+        pathwayCobblesMat.map.colorSpace = THREE.SRGBColorSpace;
+      }
+    } else {
+      pathwayCobblesMat = new THREE.MeshStandardMaterial({
+        color: '#9C9488',
+        roughness: 0.78,
+        metalness: 0.02,
+        bumpMap: grassBump,
+        bumpScale: 0.014,
+      });
+    }
+
     return {
       grassTop: new THREE.MeshStandardMaterial({
         color: '#ffffff',
@@ -19,6 +47,10 @@ export const Terrain: React.FC<TerrainProps> = ({ nodes, shadows }) => {
         metalness: 0.01,
         bumpMap: grassBump,
         bumpScale: 0.022,
+        transparent: false,
+        depthWrite: true,
+        depthTest: true,
+        side: THREE.FrontSide,
       }),
       soilRim: new THREE.MeshStandardMaterial({
         color: '#ffffff',
@@ -27,6 +59,10 @@ export const Terrain: React.FC<TerrainProps> = ({ nodes, shadows }) => {
         metalness: 0.03,
         bumpMap: grassBump,
         bumpScale: 0.026,
+        transparent: false,
+        depthWrite: true,
+        depthTest: true,
+        side: THREE.FrontSide,
       }),
       rockUnderside: new THREE.MeshStandardMaterial({
         color: '#ffffff',
@@ -35,25 +71,14 @@ export const Terrain: React.FC<TerrainProps> = ({ nodes, shadows }) => {
         metalness: 0.04,
         bumpMap: grassBump,
         bumpScale: 0.032,
+        transparent: false,
+        depthWrite: true,
+        depthTest: true,
+        side: THREE.FrontSide,
       }),
-      pathwayEarth: new THREE.MeshStandardMaterial({
-        color: '#ffffff',
-        vertexColors: true,
-        roughness: 0.85,
-        metalness: 0.01,
-        bumpMap: grassBump,
-        bumpScale: 0.016,
-      }),
-      pathwayCobbles: new THREE.MeshStandardMaterial({
-        color: '#ffffff',
-        vertexColors: true,
-        roughness: 0.74,
-        metalness: 0.04,
-        bumpMap: grassBump,
-        bumpScale: 0.014,
-      }),
+      pathwayCobbles: pathwayCobblesMat,
     };
-  }, [grassBump]);
+  }, [grassBump, nodes]);
 
   const getGeometry = (name: string): THREE.BufferGeometry | null => {
     const obj = nodes[name] as THREE.Mesh | undefined;
@@ -63,7 +88,6 @@ export const Terrain: React.FC<TerrainProps> = ({ nodes, shadows }) => {
   const grassGeo = getGeometry('Island_Terrain_Top');
   const soilGeo = getGeometry('Island_Soil_Rim');
   const rockGeo = getGeometry('Island_Rock_Underside');
-  const pathGeo = getGeometry('Crossroads_Pathway');
   const cobblesGeo = getGeometry('Pathway_Cobbles');
 
   return (
@@ -93,14 +117,6 @@ export const Terrain: React.FC<TerrainProps> = ({ nodes, shadows }) => {
           material={materials.rockUnderside}
           receiveShadow={shadows}
           castShadow={shadows}
-        />
-      )}
-      {pathGeo && (
-        <mesh
-          name="Crossroads_Pathway"
-          geometry={pathGeo}
-          material={materials.pathwayEarth}
-          receiveShadow={shadows}
         />
       )}
       {cobblesGeo && (

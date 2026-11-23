@@ -1,7 +1,11 @@
 import React, { useMemo, useRef, useState } from 'react';
 import { useFrame, ThreeEvent } from '@react-three/fiber';
 import * as THREE from 'three';
-import { getWoodGrainTexture } from '../../utils/proceduralTextures';
+import {
+  getWoodGrainAlbedoTexture,
+  getWoodGrainTexture,
+  getWoodRoughnessTexture,
+} from '../../utils/proceduralTextures';
 
 export type SignId = 'ux' | 'game';
 
@@ -28,49 +32,80 @@ export const WoodenSigns: React.FC<WoodenSignsProps> = ({
   const [gameHovered, setGameHovered] = useState(false);
 
   const woodBump = useMemo(() => getWoodGrainTexture(), []);
+  const woodAlbedo = useMemo(() => getWoodGrainAlbedoTexture(), []);
+  const woodRoughness = useMemo(() => getWoodRoughnessTexture(), []);
 
   const materials = useMemo(() => {
     return {
       post: new THREE.MeshStandardMaterial({
         color: '#ffffff',
         vertexColors: true,
-        roughness: 0.72,
-        metalness: 0.04,
+        map: woodAlbedo,
+        roughnessMap: woodRoughness,
+        roughness: 0.80,
+        metalness: 0.02,
         bumpMap: woodBump,
-        bumpScale: 0.018,
+        bumpScale: 0.024,
+        transparent: false,
+        opacity: 1.0,
+        depthWrite: true,
+        depthTest: true,
+        side: THREE.FrontSide,
       }),
       uxBoard: new THREE.MeshStandardMaterial({
         color: '#ffffff',
         vertexColors: true,
-        roughness: 0.62,
-        metalness: 0.03,
+        map: woodAlbedo,
+        roughnessMap: woodRoughness,
+        roughness: 0.76,
+        metalness: 0.02,
         bumpMap: woodBump,
-        bumpScale: 0.014,
+        bumpScale: 0.020,
+        transparent: false,
+        opacity: 1.0,
+        depthWrite: true,
+        depthTest: true,
+        side: THREE.FrontSide,
       }),
       gameBoard: new THREE.MeshStandardMaterial({
         color: '#ffffff',
         vertexColors: true,
-        roughness: 0.62,
-        metalness: 0.03,
+        map: woodAlbedo,
+        roughnessMap: woodRoughness,
+        roughness: 0.76,
+        metalness: 0.02,
         bumpMap: woodBump,
-        bumpScale: 0.014,
+        bumpScale: 0.020,
+        transparent: false,
+        opacity: 1.0,
+        depthWrite: true,
+        depthTest: true,
+        side: THREE.FrontSide,
       }),
       uxLettering: new THREE.MeshStandardMaterial({
-        color: '#F5EFE2',
+        color: '#F7F1E4',
         emissive: '#EAD8B1',
-        emissiveIntensity: 0.16,
-        roughness: 0.34,
-        metalness: 0.05,
+        emissiveIntensity: 0.14,
+        roughness: 0.36,
+        metalness: 0.04,
+        transparent: false,
+        depthWrite: true,
+        depthTest: true,
+        side: THREE.FrontSide,
       }),
       gameLettering: new THREE.MeshStandardMaterial({
-        color: '#F5EFE2',
+        color: '#F7F1E4',
         emissive: '#EAD8B1',
-        emissiveIntensity: 0.16,
-        roughness: 0.34,
-        metalness: 0.05,
+        emissiveIntensity: 0.14,
+        roughness: 0.36,
+        metalness: 0.04,
+        transparent: false,
+        depthWrite: true,
+        depthTest: true,
+        side: THREE.FrontSide,
       }),
     };
-  }, [woodBump]);
+  }, [woodAlbedo, woodBump, woodRoughness]);
 
   const getGeometry = (name: string): THREE.BufferGeometry | null => {
     const obj = nodes[name] as THREE.Mesh | undefined;
@@ -84,24 +119,24 @@ export const WoodenSigns: React.FC<WoodenSignsProps> = ({
     materials.uxBoard.emissive.set(isUxActive ? '#4A2E14' : '#000000');
     materials.uxBoard.emissiveIntensity = THREE.MathUtils.lerp(
       materials.uxBoard.emissiveIntensity,
-      isUxActive ? 0.42 : 0.0,
+      isUxActive ? 0.38 : 0.0,
       delta * 8
     );
     materials.uxLettering.emissiveIntensity = THREE.MathUtils.lerp(
       materials.uxLettering.emissiveIntensity,
-      isUxActive ? 0.58 : 0.16,
+      isUxActive ? 0.54 : 0.14,
       delta * 8
     );
 
     materials.gameBoard.emissive.set(isGameActive ? '#4A2E14' : '#000000');
     materials.gameBoard.emissiveIntensity = THREE.MathUtils.lerp(
       materials.gameBoard.emissiveIntensity,
-      isGameActive ? 0.42 : 0.0,
+      isGameActive ? 0.38 : 0.0,
       delta * 8
     );
     materials.gameLettering.emissiveIntensity = THREE.MathUtils.lerp(
       materials.gameLettering.emissiveIntensity,
-      isGameActive ? 0.58 : 0.16,
+      isGameActive ? 0.54 : 0.14,
       delta * 8
     );
 

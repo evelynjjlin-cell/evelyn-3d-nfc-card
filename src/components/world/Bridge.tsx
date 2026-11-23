@@ -1,6 +1,10 @@
 import React, { useMemo } from 'react';
 import * as THREE from 'three';
-import { getWoodGrainTexture } from '../../utils/proceduralTextures';
+import {
+  getWoodGrainAlbedoTexture,
+  getWoodGrainTexture,
+  getWoodRoughnessTexture,
+} from '../../utils/proceduralTextures';
 
 interface BridgeProps {
   nodes: Record<string, THREE.Object3D>;
@@ -9,18 +13,27 @@ interface BridgeProps {
 
 export const Bridge: React.FC<BridgeProps> = ({ nodes, shadows }) => {
   const woodBump = useMemo(() => getWoodGrainTexture(), []);
+  const woodAlbedo = useMemo(() => getWoodGrainAlbedoTexture(), []);
+  const woodRoughness = useMemo(() => getWoodRoughnessTexture(), []);
 
   const bridgeMat = useMemo(
     () =>
       new THREE.MeshStandardMaterial({
         color: '#ffffff',
         vertexColors: true,
-        roughness: 0.65,
-        metalness: 0.04,
+        map: woodAlbedo,
+        roughnessMap: woodRoughness,
+        roughness: 0.78,
+        metalness: 0.02,
         bumpMap: woodBump,
-        bumpScale: 0.018,
+        bumpScale: 0.022,
+        transparent: false,
+        opacity: 1.0,
+        depthWrite: true,
+        depthTest: true,
+        side: THREE.FrontSide,
       }),
-    [woodBump]
+    [woodAlbedo, woodBump, woodRoughness]
   );
 
   const bridgeGeo = useMemo(() => {

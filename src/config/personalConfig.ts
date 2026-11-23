@@ -26,7 +26,8 @@ export type CameraPresetId =
   | 'closeupTrailStones'
   | 'closeupBridgeApproaches'
   | 'closeupCreekWater'
-  | 'closeupPlaque';
+  | 'closeupPlaque'
+  | 'closeupMailboxBase';
 
 export interface CameraViewPreset {
   id: CameraPresetId;
@@ -216,19 +217,19 @@ export const PERSONAL_CONFIG: PersonalConfig = {
       id: 'closeupBroadleaf',
       label: 'Broadleaf Hero Tree Close-up',
       azimuth: -0.22,
-      polar: 1.14,
-      distanceMobile: 7.4,
-      distanceDesktop: 5.4,
-      target: [-2.35, 1.85, -1.95],
+      polar: 1.13,
+      distanceMobile: 7.8,
+      distanceDesktop: 5.9,
+      target: [-2.10, 1.55, -1.85],
     },
     closeupEvergreen: {
       id: 'closeupEvergreen',
       label: 'Evergreen Tree Close-up',
       azimuth: 0.22,
-      polar: 1.12,
-      distanceMobile: 7.2,
-      distanceDesktop: 5.2,
-      target: [2.15, 1.75, -1.85],
+      polar: 1.11,
+      distanceMobile: 7.6,
+      distanceDesktop: 5.7,
+      target: [1.95, 1.55, -1.85],
     },
     closeupDesignSign: {
       id: 'closeupDesignSign',
@@ -237,7 +238,7 @@ export const PERSONAL_CONFIG: PersonalConfig = {
       polar: 1.08,
       distanceMobile: 6.2,
       distanceDesktop: 4.4,
-      target: [-1.52, 1.12, -0.68],
+      target: [-1.52, 1.05, -0.68],
     },
     closeupGameSign: {
       id: 'closeupGameSign',
@@ -246,7 +247,7 @@ export const PERSONAL_CONFIG: PersonalConfig = {
       polar: 1.08,
       distanceMobile: 6.2,
       distanceDesktop: 4.4,
-      target: [1.52, 1.12, -0.64],
+      target: [1.52, 1.05, -0.64],
     },
     closeupTrailStones: {
       id: 'closeupTrailStones',
@@ -283,6 +284,15 @@ export const PERSONAL_CONFIG: PersonalConfig = {
       distanceMobile: 6.4,
       distanceDesktop: 4.6,
       target: [0.0, -0.35, 3.15],
+    },
+    closeupMailboxBase: {
+      id: 'closeupMailboxBase',
+      label: 'Mailbox & Lower Support Base Close-up',
+      azimuth: -0.20,
+      polar: 1.06,
+      distanceMobile: 5.4,
+      distanceDesktop: 3.8,
+      target: [1.24, 0.78, 1.36],
     },
   },
 };

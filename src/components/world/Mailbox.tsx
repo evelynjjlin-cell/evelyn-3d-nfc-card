@@ -1,7 +1,12 @@
 import React, { useMemo, useRef, useState } from 'react';
 import { useFrame, ThreeEvent } from '@react-three/fiber';
 import * as THREE from 'three';
-import { getMailboxPlaqueTexture, getWoodGrainTexture } from '../../utils/proceduralTextures';
+import {
+  getMailboxPlaqueTexture,
+  getWoodGrainAlbedoTexture,
+  getWoodGrainTexture,
+  getWoodRoughnessTexture,
+} from '../../utils/proceduralTextures';
 
 interface MailboxProps {
   nodes: Record<string, THREE.Object3D>;
@@ -27,6 +32,8 @@ export const Mailbox: React.FC<MailboxProps> = ({
   const [hovered, setHovered] = useState(false);
 
   const woodBump = useMemo(() => getWoodGrainTexture(), []);
+  const woodAlbedo = useMemo(() => getWoodGrainAlbedoTexture(), []);
+  const woodRoughness = useMemo(() => getWoodRoughnessTexture(), []);
   const plaqueTex = useMemo(() => getMailboxPlaqueTexture(), []);
 
   const materials = useMemo(() => {
@@ -34,35 +41,59 @@ export const Mailbox: React.FC<MailboxProps> = ({
       post: new THREE.MeshStandardMaterial({
         color: '#ffffff',
         vertexColors: true,
-        roughness: 0.72,
-        metalness: 0.04,
+        map: woodAlbedo,
+        roughnessMap: woodRoughness,
+        roughness: 0.80,
+        metalness: 0.02,
         bumpMap: woodBump,
-        bumpScale: 0.018,
+        bumpScale: 0.024,
+        transparent: false,
+        opacity: 1.0,
+        depthWrite: true,
+        depthTest: true,
+        side: THREE.FrontSide,
       }),
       body: new THREE.MeshStandardMaterial({
         color: '#1E4A3B',
-        roughness: 0.36,
-        metalness: 0.26,
-        side: THREE.DoubleSide,
+        roughness: 0.42,
+        metalness: 0.24,
+        transparent: false,
+        opacity: 1.0,
+        depthWrite: true,
+        depthTest: true,
+        side: THREE.FrontSide,
       }),
       brass: new THREE.MeshStandardMaterial({
         color: '#E0CB9B',
-        roughness: 0.3,
+        roughness: 0.32,
         metalness: 0.68,
+        transparent: false,
+        opacity: 1.0,
+        depthWrite: true,
+        depthTest: true,
+        side: THREE.FrontSide,
       }),
       letter: new THREE.MeshStandardMaterial({
         color: '#FAF5E8',
         emissive: '#F2E2BD',
-        emissiveIntensity: 0.18,
-        roughness: 0.36,
+        emissiveIntensity: 0.16,
+        roughness: 0.38,
+        transparent: false,
+        depthWrite: true,
+        depthTest: true,
+        side: THREE.FrontSide,
       }),
       waxSeal: new THREE.MeshStandardMaterial({
         color: '#9C322D',
         roughness: 0.34,
         metalness: 0.15,
+        transparent: false,
+        depthWrite: true,
+        depthTest: true,
+        side: THREE.FrontSide,
       }),
     };
-  }, [woodBump]);
+  }, [woodAlbedo, woodBump, woodRoughness]);
 
   const getGeometry = (name: string): THREE.BufferGeometry | null => {
     const obj = nodes[name] as THREE.Mesh | undefined;
@@ -76,13 +107,13 @@ export const Mailbox: React.FC<MailboxProps> = ({
     materials.body.emissive.set(isActive ? '#173A2E' : '#000000');
     materials.body.emissiveIntensity = THREE.MathUtils.lerp(
       materials.body.emissiveIntensity,
-      isActive ? 0.5 : 0.0,
+      isActive ? 0.45 : 0.0,
       delta * 8
     );
     materials.brass.emissive.set(isActive ? '#8C7345' : '#000000');
     materials.brass.emissiveIntensity = THREE.MathUtils.lerp(
       materials.brass.emissiveIntensity,
-      isActive ? 0.42 : 0.0,
+      isActive ? 0.38 : 0.0,
       delta * 8
     );
 
@@ -196,22 +227,32 @@ export const Mailbox: React.FC<MailboxProps> = ({
         </mesh>
       </group>
 
-      {/* Compact engraved brass nameplate mounted cleanly on the mailbox post */}
+      {/* Compact engraved brass nameplate mounted cleanly on the vertical oak post below the corbel brace */}
       <group
-        position={[1.19, 0.65, 1.54]}
-        rotation={[-0.06, THREE.MathUtils.degToRad(-22), 0]}
+        position={[1.23, 0.62, 1.47]}
+        rotation={[0.0, THREE.MathUtils.degToRad(-22), 0]}
       >
         <mesh castShadow={shadows}>
-          <boxGeometry args={[0.44, 0.14, 0.028]} />
-          <meshStandardMaterial color="#4D301B" roughness={0.55} />
+          <boxGeometry args={[0.38, 0.11, 0.026]} />
+          <meshStandardMaterial
+            color="#583820"
+            roughness={0.76}
+            metalness={0.02}
+            transparent={false}
+            depthWrite={true}
+            depthTest={true}
+          />
         </mesh>
-        <mesh position={[0, 0, 0.016]}>
-          <planeGeometry args={[0.41, 0.12]} />
+        <mesh position={[0, 0, 0.014]}>
+          <planeGeometry args={[0.35, 0.092]} />
           <meshStandardMaterial
             map={plaqueTex}
-            roughness={0.35}
+            roughness={0.38}
             emissive="#DCC99D"
             emissiveIntensity={hovered || isOpen ? 0.22 : 0.05}
+            transparent={false}
+            depthWrite={true}
+            depthTest={true}
           />
         </mesh>
       </group>

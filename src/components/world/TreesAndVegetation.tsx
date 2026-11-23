@@ -2,11 +2,6 @@ import React, { useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { QualityPreset } from '../../config/personalConfig';
-import {
-  getFoliageBumpTexture,
-  getGrassBumpTexture,
-  getWoodGrainTexture,
-} from '../../utils/proceduralTextures';
 
 interface TreesAndVegetationProps {
   nodes: Record<string, THREE.Object3D>;
@@ -14,69 +9,166 @@ interface TreesAndVegetationProps {
 }
 
 const TREE_DEFS = [
-  { id: 'Tree_NW_Hero', variant: 0, phase: 0.0 },
-  { id: 'Tree_N_Left', variant: 2, phase: 1.1 },
-  { id: 'Tree_N_Center', variant: 1, phase: 2.2 },
-  { id: 'Tree_N_Right', variant: 2, phase: 3.3 },
-  { id: 'Tree_NE_Hero', variant: 1, phase: 4.4 },
-  { id: 'Tree_W_Flank', variant: 1, phase: 5.1 },
-  { id: 'Tree_E_Flank', variant: 0, phase: 5.9 },
+  { id: 'Tree_NW_Hero', phase: 0.0 },
+  { id: 'Tree_N_Left', phase: 1.1 },
+  { id: 'Tree_N_Center', phase: 2.2 },
+  { id: 'Tree_N_Right', phase: 3.3 },
+  { id: 'Tree_NE_Hero', phase: 4.4 },
+  { id: 'Tree_W_Flank', phase: 5.1 },
+  { id: 'Tree_E_Flank', phase: 5.9 },
 ];
+
+/**
+ * Configures a GLB-embedded material for either solid PBR rendering (trunks, boulders)
+ * or crisp depth-writing alpha-cutout rendering (broadleaf & pine foliage, shrubs, ferns, grass, flowers).
+ */
+function configureGlbMaterial(
+  rawMat: THREE.Material | THREE.Material[] | undefined,
+  options: {
+    isAlphaCutout?: boolean;
+    alphaTest?: number;
+    roughness?: number;
+    metalness?: number;
+    useVertexColors?: boolean;
+  }
+): THREE.MeshStandardMaterial {
+  const baseMat = Array.isArray(rawMat) ? rawMat[0] : rawMat;
+  const mat =
+    baseMat && (baseMat as THREE.MeshStandardMaterial).isMeshStandardMaterial
+      ? (baseMat as THREE.MeshStandardMaterial).clone()
+      : new THREE.MeshStandardMaterial({ color: '#ffffff' });
+
+  mat.roughness = options.roughness ?? 0.78;
+  mat.metalness = options.metalness ?? 0.01;
+  mat.depthWrite = true;
+  mat.depthTest = true;
+
+  if (options.useVertexColors !== undefined) {
+    mat.vertexColors = options.useVertexColors;
+  }
+
+  if (mat.map) {
+    mat.map.anisotropy = 8;
+    mat.map.colorSpace = THREE.SRGBColorSpace;
+  }
+  if (mat.normalMap) {
+    mat.normalMap.anisotropy = 4;
+    mat.normalScale.set(0.85, 0.85);
+  }
+
+  if (options.isAlphaCutout) {
+    mat.transparent = false;
+    mat.alphaTest = options.alphaTest ?? 0.28;
+    mat.side = THREE.DoubleSide;
+  } else {
+    mat.transparent = false;
+    mat.alphaTest = 0.0;
+    mat.side = THREE.FrontSide;
+  }
+
+  mat.needsUpdate = true;
+  return mat;
+}
 
 export const TreesAndVegetation: React.FC<TreesAndVegetationProps> = ({ nodes, quality }) => {
   const canopyGroupRef = useRef<THREE.Group>(null);
-  const woodBump = useMemo(() => getWoodGrainTexture(), []);
-  const foliageBump = useMemo(() => getFoliageBumpTexture(), []);
-  const rockBump = useMemo(() => getGrassBumpTexture(), []);
 
-  const materials = useMemo(() => {
+  const getMeshAndMaterial = (
+    name: string,
+    opts: {
+      isAlphaCutout?: boolean;
+      alphaTest?: number;
+      roughness?: number;
+      metalness?: number;
+      useVertexColors?: boolean;
+    }
+  ): { geometry: THREE.BufferGeometry; material: THREE.MeshStandardMaterial } | null => {
+    const obj = nodes[name] as THREE.Mesh | undefined;
+    if (!obj || !obj.isMesh || !obj.geometry) return null;
+    const hasColorAttr = Boolean(obj.geometry.attributes.color);
     return {
-      bark: new THREE.MeshStandardMaterial({
-        color: '#ffffff',
-        vertexColors: true,
-        roughness: 0.84,
-        metalness: 0.02,
-        bumpMap: woodBump,
-        bumpScale: 0.022,
-      }),
-      foliage: new THREE.MeshStandardMaterial({
-        color: '#ffffff',
-        vertexColors: true,
-        roughness: 0.72,
-        metalness: 0.01,
-        bumpMap: foliageBump,
-        bumpScale: 0.024,
-      }),
-      rocks: new THREE.MeshStandardMaterial({
-        color: '#ffffff',
-        vertexColors: true,
-        roughness: 0.8,
-        metalness: 0.03,
-        bumpMap: rockBump,
-        bumpScale: 0.022,
-      }),
-      fernsAndGrass: new THREE.MeshStandardMaterial({
-        color: '#ffffff',
-        vertexColors: true,
-        roughness: 0.68,
-        metalness: 0.01,
-        bumpMap: foliageBump,
-        bumpScale: 0.012,
-        side: THREE.DoubleSide,
-      }),
-      wildflowers: new THREE.MeshStandardMaterial({
-        color: '#F6F1E4',
-        emissive: '#DCC99D',
-        emissiveIntensity: 0.16,
-        roughness: 0.42,
+      geometry: obj.geometry,
+      material: configureGlbMaterial(obj.material, {
+        ...opts,
+        useVertexColors: opts.useVertexColors ?? hasColorAttr,
       }),
     };
-  }, [woodBump, foliageBump, rockBump]);
-
-  const getGeometry = (name: string): THREE.BufferGeometry | null => {
-    const obj = nodes[name] as THREE.Mesh | undefined;
-    return obj && obj.isMesh ? obj.geometry : null;
   };
+
+  const treeMeshes = useMemo(() => {
+    return TREE_DEFS.map((t) => ({
+      ...t,
+      trunk: getMeshAndMaterial(`${t.id}_Trunk`, {
+        isAlphaCutout: false,
+        roughness: 0.84,
+        metalness: 0.01,
+      }),
+      canopy: getMeshAndMaterial(`${t.id}_Canopy`, {
+        isAlphaCutout: true,
+        alphaTest: 0.28,
+        roughness: 0.76,
+        metalness: 0.01,
+      }),
+    }));
+  }, [nodes]);
+
+  const shrubsMesh = useMemo(
+    () =>
+      getMeshAndMaterial('Forest_Shrubs', {
+        isAlphaCutout: true,
+        alphaTest: 0.28,
+        roughness: 0.76,
+        metalness: 0.01,
+      }),
+    [nodes]
+  );
+
+  const rocksMesh = useMemo(
+    () =>
+      getMeshAndMaterial('Environment_Rocks', {
+        isAlphaCutout: false,
+        roughness: 0.82,
+        metalness: 0.02,
+        useVertexColors: false,
+      }),
+    [nodes]
+  );
+
+  const fernsMesh = useMemo(
+    () =>
+      getMeshAndMaterial('Forest_Ferns', {
+        isAlphaCutout: true,
+        alphaTest: 0.26,
+        roughness: 0.72,
+        metalness: 0.01,
+        useVertexColors: false,
+      }),
+    [nodes]
+  );
+
+  const grassMesh = useMemo(
+    () =>
+      getMeshAndMaterial('Forest_Grass', {
+        isAlphaCutout: true,
+        alphaTest: 0.24,
+        roughness: 0.74,
+        metalness: 0.01,
+        useVertexColors: false,
+      }),
+    [nodes]
+  );
+
+  const flowersMesh = useMemo(
+    () =>
+      getMeshAndMaterial('Wildflowers', {
+        isAlphaCutout: true,
+        alphaTest: 0.26,
+        roughness: 0.58,
+        metalness: 0.01,
+        useVertexColors: false,
+      }),
+    [nodes]
+  );
 
   useFrame(({ clock }) => {
     if (!quality.enableWindAnimation || !canopyGroupRef.current) return;
@@ -84,44 +176,38 @@ export const TreesAndVegetation: React.FC<TreesAndVegetationProps> = ({ nodes, q
     canopyGroupRef.current.children.forEach((child, idx) => {
       const def = TREE_DEFS[idx];
       if (!def) return;
-      child.rotation.z = Math.sin(t * 0.9 + def.phase) * 0.007;
-      child.rotation.x = Math.cos(t * 0.72 + def.phase) * 0.005;
+      child.rotation.z = Math.sin(t * 0.85 + def.phase) * 0.005;
+      child.rotation.x = Math.cos(t * 0.68 + def.phase) * 0.004;
     });
   });
 
-  const rocksGeo = getGeometry('Environment_Rocks');
-  const fernsGeo = getGeometry('Forest_Ferns');
-  const flowersGeo = getGeometry('Wildflowers');
-
   return (
     <group name="TreesAndVegetationGroup">
-      {/* Sculpted Tree Trunks & Visible Secondary Branches */}
-      {TREE_DEFS.map((t) => {
-        const trunkGeo = getGeometry(`${t.id}_Trunk`);
-        if (!trunkGeo) return null;
+      {/* Normal-Mapped Stylized Tree Trunks & Branch Skeletons (Quaternius CC0) */}
+      {treeMeshes.map((t) => {
+        if (!t.trunk) return null;
         return (
           <mesh
             key={`${t.id}_Trunk`}
             name={`${t.id}_Trunk`}
-            geometry={trunkGeo}
-            material={materials.bark}
+            geometry={t.trunk.geometry}
+            material={t.trunk.material}
             castShadow={quality.shadows}
             receiveShadow={quality.shadows}
           />
         );
       })}
 
-      {/* Sculpted Multi-Cluster Tree Canopies with 3D Vertex Color Sun/AO Gradients */}
+      {/* Alpha-Cutout Stylized Broadleaf & Evergreen Canopies (Quaternius CC0) */}
       <group ref={canopyGroupRef} name="TreeCanopies">
-        {TREE_DEFS.map((t) => {
-          const canopyGeo = getGeometry(`${t.id}_Canopy`);
-          if (!canopyGeo) return null;
+        {treeMeshes.map((t) => {
+          if (!t.canopy) return null;
           return (
             <mesh
               key={`${t.id}_Canopy`}
               name={`${t.id}_Canopy`}
-              geometry={canopyGeo}
-              material={materials.foliage}
+              geometry={t.canopy.geometry}
+              material={t.canopy.material}
               castShadow={quality.shadows}
               receiveShadow={quality.shadows}
             />
@@ -129,35 +215,58 @@ export const TreesAndVegetation: React.FC<TreesAndVegetationProps> = ({ nodes, q
         })}
       </group>
 
-      {/* Chiseled Mossy Boulders & Creek Stones */}
-      {rocksGeo && (
+      {/* Woodland Shrubs (Bush_Common & Bush_Common_Flowers) */}
+      {shrubsMesh && (
+        <mesh
+          name="Forest_Shrubs"
+          geometry={shrubsMesh.geometry}
+          material={shrubsMesh.material}
+          castShadow={quality.shadows}
+          receiveShadow={quality.shadows}
+        />
+      )}
+
+      {/* Hand-Painted Mossy Boulders & Creek Grotto Stones (Rock_Medium_1..3) */}
+      {rocksMesh && (
         <mesh
           name="Environment_Rocks"
-          geometry={rocksGeo}
-          material={materials.rocks}
+          geometry={rocksMesh.geometry}
+          material={rocksMesh.material}
           castShadow={quality.shadows}
           receiveShadow={quality.shadows}
         />
       )}
 
-      {/* Botanical Ferns & 3D Multi-Blade Grass Clumps */}
-      {fernsGeo && (
+      {/* Hand-Painted Woodland Ferns, Broadleaf Plants & Clovers */}
+      {fernsMesh && (
         <mesh
           name="Forest_Ferns"
-          geometry={fernsGeo}
-          material={materials.fernsAndGrass}
+          geometry={fernsMesh.geometry}
+          material={fernsMesh.material}
           castShadow={quality.shadows}
           receiveShadow={quality.shadows}
         />
       )}
 
-      {/* Multi-Petal Wildflower Clusters */}
-      {flowersGeo && (
+      {/* Stylized Woodland Grass Tufts */}
+      {grassMesh && (
+        <mesh
+          name="Forest_Grass"
+          geometry={grassMesh.geometry}
+          material={grassMesh.material}
+          castShadow={false}
+          receiveShadow={quality.shadows}
+        />
+      )}
+
+      {/* Woodland Wildflower Blossoms & Flowering Shrub Petals */}
+      {flowersMesh && (
         <mesh
           name="Wildflowers"
-          geometry={flowersGeo}
-          material={materials.wildflowers}
+          geometry={flowersMesh.geometry}
+          material={flowersMesh.material}
           castShadow={false}
+          receiveShadow={quality.shadows}
         />
       )}
     </group>

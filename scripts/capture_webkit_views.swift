@@ -188,6 +188,10 @@ class SnapshotRunner: NSObject, WKNavigationDelegate {
         await loadUrl("\(baseUrl)/?view=closeupPlaque")
         await saveSnapshot(filenames: ["12_closeup_identity_plaque.png"])
 
+        // 16. Close-up of the mailbox and its lower support/base
+        await loadUrl("\(baseUrl)/?view=closeupMailboxBase")
+        await saveSnapshot(filenames: ["16_closeup_mailbox_and_base.png"])
+
         NSApplication.shared.terminate(nil)
     }
 }
