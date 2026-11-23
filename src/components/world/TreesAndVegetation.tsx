@@ -2,7 +2,11 @@ import React, { useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { QualityPreset } from '../../config/personalConfig';
-import { getWoodGrainTexture } from '../../utils/proceduralTextures';
+import {
+  getFoliageBumpTexture,
+  getGrassBumpTexture,
+  getWoodGrainTexture,
+} from '../../utils/proceduralTextures';
 
 interface TreesAndVegetationProps {
   nodes: Record<string, THREE.Object3D>;
@@ -11,63 +15,63 @@ interface TreesAndVegetationProps {
 
 const TREE_DEFS = [
   { id: 'Tree_NW_Hero', variant: 0, phase: 0.0 },
-  { id: 'Tree_N_Left', variant: 1, phase: 1.1 },
-  { id: 'Tree_N_Center', variant: 0, phase: 2.2 },
+  { id: 'Tree_N_Left', variant: 2, phase: 1.1 },
+  { id: 'Tree_N_Center', variant: 1, phase: 2.2 },
   { id: 'Tree_N_Right', variant: 2, phase: 3.3 },
   { id: 'Tree_NE_Hero', variant: 1, phase: 4.4 },
-  { id: 'Tree_W_Flank', variant: 2, phase: 5.1 },
+  { id: 'Tree_W_Flank', variant: 1, phase: 5.1 },
   { id: 'Tree_E_Flank', variant: 0, phase: 5.9 },
 ];
 
 export const TreesAndVegetation: React.FC<TreesAndVegetationProps> = ({ nodes, quality }) => {
   const canopyGroupRef = useRef<THREE.Group>(null);
   const woodBump = useMemo(() => getWoodGrainTexture(), []);
+  const foliageBump = useMemo(() => getFoliageBumpTexture(), []);
+  const rockBump = useMemo(() => getGrassBumpTexture(), []);
 
   const materials = useMemo(() => {
     return {
       bark: new THREE.MeshStandardMaterial({
-        color: '#6E4E37',
-        roughness: 0.82,
+        color: '#ffffff',
+        vertexColors: true,
+        roughness: 0.84,
         metalness: 0.02,
         bumpMap: woodBump,
-        bumpScale: 0.018,
+        bumpScale: 0.022,
       }),
-      foliage: [
-        new THREE.MeshStandardMaterial({
-          color: '#214E3E',
-          roughness: 0.72,
-          metalness: 0.02,
-        }),
-        new THREE.MeshStandardMaterial({
-          color: '#4F704B',
-          roughness: 0.74,
-          metalness: 0.02,
-        }),
-        new THREE.MeshStandardMaterial({
-          color: '#769273',
-          roughness: 0.75,
-          metalness: 0.02,
-        }),
-      ],
+      foliage: new THREE.MeshStandardMaterial({
+        color: '#ffffff',
+        vertexColors: true,
+        roughness: 0.72,
+        metalness: 0.01,
+        bumpMap: foliageBump,
+        bumpScale: 0.024,
+      }),
       rocks: new THREE.MeshStandardMaterial({
-        color: '#6E7868',
-        roughness: 0.78,
-        metalness: 0.04,
+        color: '#ffffff',
+        vertexColors: true,
+        roughness: 0.8,
+        metalness: 0.03,
+        bumpMap: rockBump,
+        bumpScale: 0.022,
       }),
-      ferns: new THREE.MeshStandardMaterial({
-        color: '#4A6E46',
+      fernsAndGrass: new THREE.MeshStandardMaterial({
+        color: '#ffffff',
+        vertexColors: true,
         roughness: 0.68,
-        metalness: 0.02,
+        metalness: 0.01,
+        bumpMap: foliageBump,
+        bumpScale: 0.012,
         side: THREE.DoubleSide,
       }),
       wildflowers: new THREE.MeshStandardMaterial({
         color: '#F6F1E4',
         emissive: '#DCC99D',
-        emissiveIntensity: 0.22,
-        roughness: 0.4,
+        emissiveIntensity: 0.16,
+        roughness: 0.42,
       }),
     };
-  }, [woodBump]);
+  }, [woodBump, foliageBump, rockBump]);
 
   const getGeometry = (name: string): THREE.BufferGeometry | null => {
     const obj = nodes[name] as THREE.Mesh | undefined;
@@ -80,8 +84,8 @@ export const TreesAndVegetation: React.FC<TreesAndVegetationProps> = ({ nodes, q
     canopyGroupRef.current.children.forEach((child, idx) => {
       const def = TREE_DEFS[idx];
       if (!def) return;
-      child.rotation.z = Math.sin(t * 0.95 + def.phase) * 0.008;
-      child.rotation.x = Math.cos(t * 0.75 + def.phase) * 0.006;
+      child.rotation.z = Math.sin(t * 0.9 + def.phase) * 0.007;
+      child.rotation.x = Math.cos(t * 0.72 + def.phase) * 0.005;
     });
   });
 
@@ -91,7 +95,7 @@ export const TreesAndVegetation: React.FC<TreesAndVegetationProps> = ({ nodes, q
 
   return (
     <group name="TreesAndVegetationGroup">
-      {/* Tree Trunks */}
+      {/* Sculpted Tree Trunks & Visible Secondary Branches */}
       {TREE_DEFS.map((t) => {
         const trunkGeo = getGeometry(`${t.id}_Trunk`);
         if (!trunkGeo) return null;
@@ -107,7 +111,7 @@ export const TreesAndVegetation: React.FC<TreesAndVegetationProps> = ({ nodes, q
         );
       })}
 
-      {/* Sculpted Tree Canopies with subtle wind breathing */}
+      {/* Sculpted Multi-Cluster Tree Canopies with 3D Vertex Color Sun/AO Gradients */}
       <group ref={canopyGroupRef} name="TreeCanopies">
         {TREE_DEFS.map((t) => {
           const canopyGeo = getGeometry(`${t.id}_Canopy`);
@@ -117,7 +121,7 @@ export const TreesAndVegetation: React.FC<TreesAndVegetationProps> = ({ nodes, q
               key={`${t.id}_Canopy`}
               name={`${t.id}_Canopy`}
               geometry={canopyGeo}
-              material={materials.foliage[t.variant % 3]}
+              material={materials.foliage}
               castShadow={quality.shadows}
               receiveShadow={quality.shadows}
             />
@@ -125,7 +129,7 @@ export const TreesAndVegetation: React.FC<TreesAndVegetationProps> = ({ nodes, q
         })}
       </group>
 
-      {/* Mossy Boulders */}
+      {/* Chiseled Mossy Boulders & Creek Stones */}
       {rocksGeo && (
         <mesh
           name="Environment_Rocks"
@@ -136,18 +140,18 @@ export const TreesAndVegetation: React.FC<TreesAndVegetationProps> = ({ nodes, q
         />
       )}
 
-      {/* Botanical Fern Rosettes */}
+      {/* Botanical Ferns & 3D Multi-Blade Grass Clumps */}
       {fernsGeo && (
         <mesh
           name="Forest_Ferns"
           geometry={fernsGeo}
-          material={materials.ferns}
+          material={materials.fernsAndGrass}
           castShadow={quality.shadows}
           receiveShadow={quality.shadows}
         />
       )}
 
-      {/* Wildflower Blossoms */}
+      {/* Multi-Petal Wildflower Clusters */}
       {flowersGeo && (
         <mesh
           name="Wildflowers"

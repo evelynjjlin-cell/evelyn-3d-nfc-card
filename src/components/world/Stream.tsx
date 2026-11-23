@@ -8,7 +8,7 @@ interface StreamProps {
 }
 
 export const Stream: React.FC<StreamProps> = ({ nodes, enableWaterShader }) => {
-  const waterMatRef = useRef<THREE.MeshPhysicalMaterial>(null);
+  const waterMatRef = useRef<THREE.MeshStandardMaterial>(null);
   const rippleGroupRef = useRef<THREE.Group>(null);
 
   const waterGeo = useMemo(() => {
@@ -18,10 +18,10 @@ export const Stream: React.FC<StreamProps> = ({ nodes, enableWaterShader }) => {
 
   const rippleLines = useMemo(
     () => [
-      { x: -2.2, z: -0.35, rotY: -0.22, len: 0.55, phase: 0.0 },
-      { x: -1.25, z: -0.02, rotY: -0.28, len: 0.62, phase: 1.4 },
-      { x: 1.15, z: 0.52, rotY: -0.25, len: 0.58, phase: 2.6 },
-      { x: 2.15, z: 0.85, rotY: -0.18, len: 0.52, phase: 3.9 },
+      { x: -2.1, z: -0.32, rotY: -0.22, len: 0.45, phase: 0.0 },
+      { x: -1.18, z: -0.02, rotY: -0.26, len: 0.48, phase: 1.4 },
+      { x: 1.12, z: 0.50, rotY: -0.24, len: 0.46, phase: 2.6 },
+      { x: 2.08, z: 0.82, rotY: -0.18, len: 0.42, phase: 3.9 },
     ],
     []
   );
@@ -30,16 +30,15 @@ export const Stream: React.FC<StreamProps> = ({ nodes, enableWaterShader }) => {
     if (!enableWaterShader) return;
     const t = clock.getElapsedTime();
     if (waterMatRef.current) {
-      waterMatRef.current.roughness = 0.14 + 0.04 * Math.sin(t * 2.1);
-      waterMatRef.current.emissiveIntensity = 0.12 + 0.05 * Math.sin(t * 1.6);
+      waterMatRef.current.roughness = 0.26 + 0.04 * Math.sin(t * 1.9);
     }
     if (rippleGroupRef.current) {
       rippleGroupRef.current.children.forEach((child, idx) => {
         const seed = rippleLines[idx];
         if (!seed) return;
-        const drift = ((t * 0.25 + seed.phase) % 1.0) - 0.5;
-        child.position.x = seed.x + drift * 0.35;
-        child.scale.x = 0.85 + 0.25 * Math.sin(t * 2.4 + seed.phase);
+        const drift = ((t * 0.22 + seed.phase) % 1.0) - 0.5;
+        child.position.x = seed.x + drift * 0.3;
+        child.scale.x = 0.85 + 0.22 * Math.sin(t * 2.2 + seed.phase);
       });
     }
   });
@@ -48,31 +47,28 @@ export const Stream: React.FC<StreamProps> = ({ nodes, enableWaterShader }) => {
     <group name="WoodlandStreamGroup">
       {waterGeo && (
         <mesh name="Stream_Water" geometry={waterGeo} receiveShadow>
-          <meshPhysicalMaterial
+          <meshStandardMaterial
             ref={waterMatRef}
-            color="#3D8A92"
-            emissive="#1C5058"
-            emissiveIntensity={0.14}
-            roughness={0.15}
-            metalness={0.08}
-            transmission={0.18}
-            thickness={0.4}
-            clearcoat={0.85}
-            clearcoatRoughness={0.15}
+            color="#ffffff"
+            vertexColors
+            roughness={0.28}
+            metalness={0.06}
+            transparent
+            opacity={0.92}
           />
         </mesh>
       )}
 
-      {/* Subtle stylized surface foam/shimmer streaks */}
+      {/* Subtle delicate current lines (no harsh white glare) */}
       <group ref={rippleGroupRef}>
         {rippleLines.map((r, i) => (
           <mesh
             key={i}
-            position={[r.x, 0.035, r.z]}
+            position={[r.x, 0.028, r.z]}
             rotation={[-Math.PI / 2, 0, r.rotY]}
           >
-            <planeGeometry args={[r.len, 0.032]} />
-            <meshBasicMaterial color="#D6F0EE" transparent opacity={0.45} />
+            <planeGeometry args={[r.len, 0.022]} />
+            <meshBasicMaterial color="#B5D4C8" transparent opacity={0.32} />
           </mesh>
         ))}
       </group>

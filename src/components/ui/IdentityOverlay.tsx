@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   CameraViewPreset,
   PERSONAL_CONFIG,
@@ -32,131 +32,151 @@ export const IdentityOverlay: React.FC<IdentityOverlayProps> = ({
   toastMessage,
 }) => {
   const { identity, destinations } = PERSONAL_CONFIG;
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const isRotated = activeCameraPreset === 'rotated';
 
   return (
     <div className="overlay-container" aria-live="polite">
-      {/* Top Header: Personal Identity & Utility Controls */}
+      {/* Top Editorial Identity Header & Compact Scene Controls */}
       <header className="identity-header">
-        <div className="identity-card">
-          <div className="identity-eyebrow">
-            <span className="eyebrow-dot" aria-hidden="true" />
-            <span>{identity.projectSubtitle}</span>
-          </div>
+        <div className="identity-editorial">
           <h1 className="identity-name">{identity.displayName}</h1>
           <p className="identity-title">{identity.professionalTitle}</p>
           <p className="identity-tagline">“{identity.tagline}”</p>
         </div>
 
-        {/* Camera Angle & Adaptive Quality Bar */}
-        <div className="top-controls" role="toolbar" aria-label="3D Scene Controls">
-          <div className="camera-pills">
-            <button
-              type="button"
-              className={`pill-btn ${activeCameraPreset === 'initial' ? 'active' : ''}`}
-              onClick={() => onChangeCameraPreset('initial')}
-              title="Reset to primary crossroads angle"
-            >
-              Reset View
-            </button>
-            <button
-              type="button"
-              className={`pill-btn ${isRotated ? 'active' : ''}`}
-              onClick={() => onChangeCameraPreset(isRotated ? 'initial' : 'rotated')}
-              title="Rotate camera to secondary crossroads angle"
-            >
-              {isRotated ? 'Angle 2 · Rotated' : 'Rotate Angle'}
-            </button>
-          </div>
+        {/* Discreet Camera Reset & Compact View/Quality Menu */}
+        <div className="utility-cluster" role="toolbar" aria-label="Scene and View Controls">
+          <button
+            type="button"
+            className={`utility-pill ${activeCameraPreset !== 'initial' ? 'utility-pill-highlight' : ''}`}
+            onClick={() => onChangeCameraPreset('initial')}
+            title="Reset camera to initial crossroads view"
+          >
+            ↺ Reset View
+          </button>
 
-          <div className="quality-selector" role="group" aria-label="Graphics Quality">
-            {(['high', 'balanced', 'lite'] as QualityLevel[]).map((q) => (
-              <button
-                key={q}
-                type="button"
-                className={`quality-btn ${activeQuality === q ? 'active' : ''}`}
-                onClick={() => onChangeQuality(q)}
-                aria-pressed={activeQuality === q}
-              >
-                {PERSONAL_CONFIG.qualityPresets[q].label}
-              </button>
-            ))}
+          <div className="settings-menu-anchor">
+            <button
+              type="button"
+              className={`utility-pill utility-icon-btn ${settingsOpen ? 'active' : ''}`}
+              onClick={() => setSettingsOpen((prev) => !prev)}
+              aria-expanded={settingsOpen}
+              aria-label="Camera angles and graphics quality"
+              title="Camera angles & graphics quality"
+            >
+              ⚙
+            </button>
+
+            {settingsOpen && (
+              <div className="settings-popover" role="dialog" aria-label="View and Quality Settings">
+                <div className="popover-group">
+                  <span className="popover-label">Camera Angle</span>
+                  <div className="popover-pills">
+                    <button
+                      type="button"
+                      className={`popover-btn ${activeCameraPreset === 'initial' ? 'active' : ''}`}
+                      onClick={() => onChangeCameraPreset('initial')}
+                    >
+                      Initial
+                    </button>
+                    <button
+                      type="button"
+                      className={`popover-btn ${isRotated ? 'active' : ''}`}
+                      onClick={() => onChangeCameraPreset('rotated')}
+                    >
+                      Rotated
+                    </button>
+                  </div>
+                </div>
+
+                <div className="popover-group">
+                  <span className="popover-label">Graphics Quality</span>
+                  <div className="popover-pills">
+                    {(['high', 'balanced', 'lite'] as QualityLevel[]).map((q) => (
+                      <button
+                        key={q}
+                        type="button"
+                        className={`popover-btn ${activeQuality === q ? 'active' : ''}`}
+                        onClick={() => onChangeQuality(q)}
+                      >
+                        {PERSONAL_CONFIG.qualityPresets[q].label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </header>
 
-      {/* Subtle Interactive Hint / Toast Feedback */}
-      <div className="scene-hint-row">
-        {toastMessage ? (
+      {/* Bottom Footer: Toast feedback + Compact Secondary Navigation Pill */}
+      <div className="bottom-bar-stack">
+        {toastMessage && (
           <div className="status-toast" role="status">
             {toastMessage}
           </div>
-        ) : (
-          <div className="interaction-hint">
-            <span>Drag to orbit</span>
-            <span className="hint-sep" aria-hidden="true">·</span>
-            <span>Tap a wooden sign or the mailbox to explore</span>
-          </div>
         )}
+
+        <nav className="compact-nav-pill" aria-label="Portfolio and Contact Links">
+          <a
+            href={destinations.uxPortfolioUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`nav-link-item ${activeHover === 'ux' ? 'highlighted' : ''}`}
+            onMouseEnter={() => onHoverNav('ux')}
+            onMouseLeave={() => onHoverNav(null)}
+            onFocus={() => onHoverNav('ux')}
+            onBlur={() => onHoverNav(null)}
+            onClick={(e) => {
+              e.preventDefault();
+              onTriggerSign('ux');
+            }}
+          >
+            {destinations.uxPortfolioLabel} <span className="arrow-glyph" aria-hidden="true">↗</span>
+          </a>
+
+          <span className="nav-divider" aria-hidden="true">·</span>
+
+          <button
+            type="button"
+            className={`nav-link-item ${activeHover === 'game' ? 'highlighted' : ''}`}
+            onMouseEnter={() => onHoverNav('game')}
+            onMouseLeave={() => onHoverNav(null)}
+            onFocus={() => onHoverNav('game')}
+            onBlur={() => onHoverNav(null)}
+            onClick={() => onTriggerSign('game')}
+          >
+            {destinations.gamePortfolioLabel}
+          </button>
+
+          <span className="nav-divider" aria-hidden="true">·</span>
+
+          <button
+            type="button"
+            className={`nav-link-item nav-link-contact ${activeHover === 'mailbox' ? 'highlighted' : ''}`}
+            onMouseEnter={() => onHoverNav('mailbox')}
+            onMouseLeave={() => onHoverNav(null)}
+            onFocus={() => onHoverNav('mailbox')}
+            onBlur={() => onHoverNav(null)}
+            onClick={onTriggerMailbox}
+          >
+            Save Contact
+          </button>
+
+          <button
+            type="button"
+            className="nav-vcard-quick"
+            onClick={onQuickSaveContact}
+            title="Download Evelyn-Lin.vcf directly"
+            aria-label="Download vCard file directly"
+          >
+            ↓ .vcf
+          </button>
+        </nav>
       </div>
-
-      {/* Accessible Secondary Navigation Dock (Fallback & Direct Access) */}
-      <nav className="bottom-nav-dock" aria-label="Primary Portfolio and Contact Actions">
-        <a
-          href={destinations.uxPortfolioUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={`dock-item ${activeHover === 'ux' ? 'highlighted' : ''}`}
-          onMouseEnter={() => onHoverNav('ux')}
-          onMouseLeave={() => onHoverNav(null)}
-          onFocus={() => onHoverNav('ux')}
-          onBlur={() => onHoverNav(null)}
-          onClick={(e) => {
-            e.preventDefault();
-            onTriggerSign('ux');
-          }}
-        >
-          <span className="dock-kicker">Left Path</span>
-          <span className="dock-label">{destinations.uxPortfolioLabel} ↗</span>
-        </a>
-
-        <button
-          type="button"
-          className={`dock-item ${activeHover === 'game' ? 'highlighted' : ''}`}
-          onMouseEnter={() => onHoverNav('game')}
-          onMouseLeave={() => onHoverNav(null)}
-          onFocus={() => onHoverNav('game')}
-          onBlur={() => onHoverNav(null)}
-          onClick={() => onTriggerSign('game')}
-        >
-          <span className="dock-kicker">Right Path</span>
-          <span className="dock-label">{destinations.gamePortfolioLabel}</span>
-        </button>
-
-        <button
-          type="button"
-          className={`dock-item dock-item-primary ${activeHover === 'mailbox' ? 'highlighted' : ''}`}
-          onMouseEnter={() => onHoverNav('mailbox')}
-          onMouseLeave={() => onHoverNav(null)}
-          onFocus={() => onHoverNav('mailbox')}
-          onBlur={() => onHoverNav(null)}
-          onClick={onTriggerMailbox}
-        >
-          <span className="dock-kicker">Woodland Mailbox</span>
-          <span className="dock-label">Contact & QR</span>
-        </button>
-
-        <button
-          type="button"
-          className="dock-item dock-item-vcard"
-          onClick={onQuickSaveContact}
-          title="Download Evelyn Lin vCard (.vcf)"
-        >
-          <span className="dock-kicker">Instant vCard</span>
-          <span className="dock-label">Save Contact</span>
-        </button>
-      </nav>
     </div>
   );
 };

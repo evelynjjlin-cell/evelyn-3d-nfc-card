@@ -13,11 +13,12 @@ export const Bridge: React.FC<BridgeProps> = ({ nodes, shadows }) => {
   const bridgeMat = useMemo(
     () =>
       new THREE.MeshStandardMaterial({
-        color: '#A27049',
-        roughness: 0.64,
+        color: '#ffffff',
+        vertexColors: true,
+        roughness: 0.65,
         metalness: 0.04,
         bumpMap: woodBump,
-        bumpScale: 0.016,
+        bumpScale: 0.018,
       }),
     [woodBump]
   );

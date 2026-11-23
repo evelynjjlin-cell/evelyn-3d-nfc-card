@@ -32,31 +32,33 @@ export const Mailbox: React.FC<MailboxProps> = ({
   const materials = useMemo(() => {
     return {
       post: new THREE.MeshStandardMaterial({
-        color: '#7A5030',
-        roughness: 0.7,
+        color: '#ffffff',
+        vertexColors: true,
+        roughness: 0.72,
         metalness: 0.04,
         bumpMap: woodBump,
-        bumpScale: 0.016,
+        bumpScale: 0.018,
       }),
       body: new THREE.MeshStandardMaterial({
-        color: '#1E493B',
-        roughness: 0.36,
-        metalness: 0.28,
+        color: '#ffffff',
+        vertexColors: true,
+        roughness: 0.38,
+        metalness: 0.25,
       }),
       brass: new THREE.MeshStandardMaterial({
-        color: '#E2CE9F',
-        roughness: 0.28,
+        color: '#E0CB9B',
+        roughness: 0.3,
         metalness: 0.68,
       }),
       letter: new THREE.MeshStandardMaterial({
-        color: '#FAF6EC',
-        emissive: '#F4E5C2',
-        emissiveIntensity: 0.25,
-        roughness: 0.35,
+        color: '#FAF5E8',
+        emissive: '#F2E2BD',
+        emissiveIntensity: 0.18,
+        roughness: 0.36,
       }),
       waxSeal: new THREE.MeshStandardMaterial({
-        color: '#9E332E',
-        roughness: 0.35,
+        color: '#9C322D',
+        roughness: 0.34,
         metalness: 0.15,
       }),
     };
@@ -74,25 +76,24 @@ export const Mailbox: React.FC<MailboxProps> = ({
     materials.body.emissive.set(isActive ? '#173A2E' : '#000000');
     materials.body.emissiveIntensity = THREE.MathUtils.lerp(
       materials.body.emissiveIntensity,
-      isActive ? 0.6 : 0.0,
+      isActive ? 0.5 : 0.0,
       delta * 8
     );
     materials.brass.emissive.set(isActive ? '#8C7345' : '#000000');
     materials.brass.emissiveIntensity = THREE.MathUtils.lerp(
       materials.brass.emissiveIntensity,
-      isActive ? 0.45 : 0.0,
+      isActive ? 0.42 : 0.0,
       delta * 8
     );
 
     if (groupRef.current) {
       groupRef.current.position.y = THREE.MathUtils.lerp(
         groupRef.current.position.y,
-        isActive ? 0.035 : 0.0,
+        isActive ? 0.032 : 0.0,
         delta * 9
       );
     }
 
-    // Animate door & emerging letter when mailbox is opened or hovered
     if (doorRef.current) {
       const targetOffsetY = isOpen ? -0.05 : hovered ? -0.015 : 0.0;
       const targetOffsetZ = isOpen ? 0.06 : hovered ? 0.02 : 0.0;
@@ -180,7 +181,7 @@ export const Mailbox: React.FC<MailboxProps> = ({
         />
       )}
 
-      {/* Emerging folded contact letter with wax seal */}
+      {/* Emerging folded contact letter with crimson wax seal */}
       <group ref={letterGroupRef} name="EmergingContactLetter">
         {letterGeo && (
           <mesh
@@ -189,46 +190,43 @@ export const Mailbox: React.FC<MailboxProps> = ({
             castShadow={shadows}
           />
         )}
-        {/* Wax seal emblem on the emerging letter */}
-        <mesh position={[0.84, 1.32, 1.48]} rotation={[0.25, -0.28, 0]}>
-          <cylinderGeometry args={[0.036, 0.036, 0.015, 16]} />
+        <mesh position={[1.08, 1.33, 1.32]} rotation={[0.25, -0.38, 0]}>
+          <cylinderGeometry args={[0.034, 0.034, 0.015, 16]} />
           <primitive object={materials.waxSeal} attach="material" />
         </mesh>
       </group>
 
-      {/* Diegetic "CONTACT" brass-and-forest nameplate mounted on the mailbox post */}
+      {/* Compact, artisanal engraved brass nameplate mounted neatly below the corbel brace */}
       <group
-        position={[0.83, 0.72, 1.42]}
-        rotation={[-0.08, THREE.MathUtils.degToRad(-16), 0]}
+        position={[1.11, 0.62, 1.24]}
+        rotation={[-0.06, THREE.MathUtils.degToRad(-22), 0]}
       >
         <mesh castShadow={shadows}>
-          <boxGeometry args={[0.64, 0.24, 0.035]} />
-          <meshStandardMaterial color="#5A3820" roughness={0.55} />
+          <boxGeometry args={[0.44, 0.14, 0.028]} />
+          <meshStandardMaterial color="#4D301B" roughness={0.55} />
         </mesh>
-        <mesh position={[0, 0, 0.02]}>
-          <planeGeometry args={[0.6, 0.21]} />
+        <mesh position={[0, 0, 0.016]}>
+          <planeGeometry args={[0.41, 0.12]} />
           <meshStandardMaterial
             map={plaqueTex}
-            roughness={0.38}
+            roughness={0.35}
             emissive="#DCC99D"
-            emissiveIntensity={hovered || isOpen ? 0.22 : 0.06}
+            emissiveIntensity={hovered || isOpen ? 0.22 : 0.05}
           />
         </mesh>
       </group>
 
-      {/* Subtle ground glow ring when hovered or opened */}
       {(hovered || activeHover === 'mailbox' || isOpen) && (
-        <mesh position={[0.9, 0.16, 1.2]} rotation={[-Math.PI / 2, 0, 0]}>
-          <ringGeometry args={[0.28, 0.42, 32]} />
-          <meshBasicMaterial color="#DCC99D" transparent opacity={0.7} side={THREE.DoubleSide} />
+        <mesh position={[1.18, 0.19, 1.08]} rotation={[-Math.PI / 2, 0, 0]}>
+          <ringGeometry args={[0.26, 0.39, 32]} />
+          <meshBasicMaterial color="#DCC99D" transparent opacity={0.68} side={THREE.DoubleSide} />
         </mesh>
       )}
 
-      {/* Generous invisible click/tap hitbox for smartphone touch */}
       <mesh
         name="Hitbox_Mailbox"
-        position={[0.88, 0.92, 1.24]}
-        rotation={[0, THREE.MathUtils.degToRad(-16), 0]}
+        position={[1.18, 0.94, 1.1]}
+        rotation={[0, THREE.MathUtils.degToRad(-22), 0]}
         onPointerDown={handlePointerDown}
         onClick={handleClick}
         onPointerOver={(e) => {

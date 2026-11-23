@@ -14,21 +14,30 @@ class SnapshotRunner: NSObject, WKNavigationDelegate {
         super.init()
     }
 
-    func setupWindow(width: CGFloat, height: CGFloat) {
+    func setupWindow(width: CGFloat, height: CGFloat, isMobile: Bool) {
         let rect = NSRect(x: 0, y: 0, width: width, height: height)
-        let config = WKWebViewConfiguration()
-        webView = WKWebView(frame: rect, configuration: config)
-        webView.navigationDelegate = self
-        webView.customUserAgent = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1"
+        if window == nil {
+            let config = WKWebViewConfiguration()
+            webView = WKWebView(frame: rect, configuration: config)
+            webView.navigationDelegate = self
+            window = NSWindow(
+                contentRect: rect,
+                styleMask: [.borderless],
+                backing: .buffered,
+                defer: false
+            )
+            window.contentView = webView
+            window.makeKeyAndOrderFront(nil)
+        } else {
+            window.setContentSize(NSSize(width: width, height: height))
+            webView.frame = rect
+        }
 
-        window = NSWindow(
-            contentRect: rect,
-            styleMask: [.borderless],
-            backing: .buffered,
-            defer: false
-        )
-        window.contentView = webView
-        window.makeKeyAndOrderFront(nil)
+        if isMobile {
+            webView.customUserAgent = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1"
+        } else {
+            webView.customUserAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 15_0) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Safari/605.1.15"
+        }
     }
 
     func sleepMs(_ ms: UInt64) async {
@@ -72,7 +81,7 @@ class SnapshotRunner: NSObject, WKNavigationDelegate {
             })()
         """)
         print("R3F Render state: \(info ?? "nil")")
-        await sleepMs(150)
+        await sleepMs(160)
     }
 
     func saveSnapshot(filename: String) async {
@@ -98,22 +107,22 @@ class SnapshotRunner: NSObject, WKNavigationDelegate {
     }
 
     func runAll() async {
-        // 1. Mobile Portrait (390x844) — Initial Crossroads View
-        setupWindow(width: 390, height: 844)
+        // 1. Mobile Portrait (390x844) — Initial Camera
+        setupWindow(width: 390, height: 844, isMobile: true)
         await loadUrl("\(baseUrl)/?view=initial")
         await saveSnapshot(filename: "mobile_portrait_initial.png")
 
-        // 2. Mobile Portrait (390x844) — Second Angle After Rotation
+        // 2. Mobile Portrait (390x844) — Rotated Camera
         _ = await evalJS("window.__setCrossroadsView && window.__setCrossroadsView('rotated')")
-        await sleepMs(300)
+        await sleepMs(350)
         await saveSnapshot(filename: "mobile_portrait_rotated.png")
 
-        // 3. Test Game Portfolio Sign ("New world in progress." Modal)
+        // 3. Functional Verification — Game Portfolio Modal & Contact Panel
         _ = await evalJS("window.__setCrossroadsView && window.__setCrossroadsView('initial')")
         await sleepMs(200)
         _ = await evalJS("""
             (() => {
-                const btns = Array.from(document.querySelectorAll('.bottom-nav-dock .dock-item'));
+                const btns = Array.from(document.querySelectorAll('.compact-nav-pill .nav-link-item'));
                 const gameBtn = btns.find(b => b.textContent.includes('Game Portfolio'));
                 if (gameBtn) gameBtn.click();
             })()
@@ -121,25 +130,37 @@ class SnapshotRunner: NSObject, WKNavigationDelegate {
         await sleepMs(350)
         await saveSnapshot(filename: "mobile_game_portfolio_modal.png")
 
-        // 4. Close Game Modal & Open Woodland Mailbox Contact Panel
         _ = await evalJS("""
             (() => {
                 const closeBtn = document.querySelector('.modal-close-btn');
                 if (closeBtn) closeBtn.click();
-                const btns = Array.from(document.querySelectorAll('.bottom-nav-dock .dock-item'));
-                const contactBtn = btns.find(b => b.textContent.includes('Contact'));
+                const btns = Array.from(document.querySelectorAll('.compact-nav-pill .nav-link-item'));
+                const contactBtn = btns.find(b => b.textContent.includes('Save Contact'));
                 if (contactBtn) contactBtn.click();
             })()
         """)
         await sleepMs(600)
         await saveSnapshot(filename: "mobile_contact_mailbox_open.png")
 
-        // 5. Desktop View (1440x900)
-        webView.customUserAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 15_0) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Safari/605.1.15"
-        window.setContentSize(NSSize(width: 1440, height: 900))
-        webView.frame = NSRect(x: 0, y: 0, width: 1440, height: 900)
+        // 4. Desktop Initial Camera (1440x900)
+        setupWindow(width: 1440, height: 900, isMobile: false)
         await loadUrl("\(baseUrl)/?view=initial")
+        await saveSnapshot(filename: "desktop_initial.png")
         await saveSnapshot(filename: "desktop_crossroads.png")
+
+        // 5. Desktop Rotated Camera (1440x900)
+        _ = await evalJS("window.__setCrossroadsView && window.__setCrossroadsView('rotated')")
+        await sleepMs(350)
+        await saveSnapshot(filename: "desktop_rotated.png")
+
+        // 6. Close-up showing tree and foliage quality (1200x900)
+        setupWindow(width: 1200, height: 900, isMobile: false)
+        await loadUrl("\(baseUrl)/?view=closeupTrees")
+        await saveSnapshot(filename: "closeup_trees_foliage.png")
+
+        // 7. Close-up showing wooden sign and mailbox quality (1200x900)
+        await loadUrl("\(baseUrl)/?view=closeupProps")
+        await saveSnapshot(filename: "closeup_signs_mailbox.png")
 
         NSApplication.shared.terminate(nil)
     }

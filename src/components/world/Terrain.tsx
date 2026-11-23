@@ -13,37 +13,44 @@ export const Terrain: React.FC<TerrainProps> = ({ nodes, shadows }) => {
   const materials = useMemo(() => {
     return {
       grassTop: new THREE.MeshStandardMaterial({
-        color: '#5B7854',
+        color: '#ffffff',
+        vertexColors: true,
         roughness: 0.82,
-        metalness: 0.02,
-        bumpMap: grassBump,
-        bumpScale: 0.018,
-      }),
-      soilRim: new THREE.MeshStandardMaterial({
-        color: '#7E5C43',
-        roughness: 0.86,
-        metalness: 0.02,
+        metalness: 0.01,
         bumpMap: grassBump,
         bumpScale: 0.022,
       }),
-      rockUnderside: new THREE.MeshStandardMaterial({
-        color: '#4E4740',
-        roughness: 0.88,
-        metalness: 0.05,
+      soilRim: new THREE.MeshStandardMaterial({
+        color: '#ffffff',
+        vertexColors: true,
+        roughness: 0.86,
+        metalness: 0.03,
         bumpMap: grassBump,
-        bumpScale: 0.028,
+        bumpScale: 0.026,
+      }),
+      rockUnderside: new THREE.MeshStandardMaterial({
+        color: '#ffffff',
+        vertexColors: true,
+        roughness: 0.88,
+        metalness: 0.04,
+        bumpMap: grassBump,
+        bumpScale: 0.032,
       }),
       pathwayEarth: new THREE.MeshStandardMaterial({
-        color: '#C2A37A',
-        roughness: 0.84,
+        color: '#ffffff',
+        vertexColors: true,
+        roughness: 0.85,
         metalness: 0.01,
         bumpMap: grassBump,
-        bumpScale: 0.014,
+        bumpScale: 0.016,
       }),
       pathwayCobbles: new THREE.MeshStandardMaterial({
-        color: '#958D81',
+        color: '#ffffff',
+        vertexColors: true,
         roughness: 0.74,
         metalness: 0.04,
+        bumpMap: grassBump,
+        bumpScale: 0.014,
       }),
     };
   }, [grassBump]);
@@ -85,6 +92,7 @@ export const Terrain: React.FC<TerrainProps> = ({ nodes, shadows }) => {
           geometry={rockGeo}
           material={materials.rockUnderside}
           receiveShadow={shadows}
+          castShadow={shadows}
         />
       )}
       {pathGeo && (

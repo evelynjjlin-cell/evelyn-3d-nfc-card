@@ -13,15 +13,25 @@ export interface QualityPreset {
   enableWaterShader: boolean;
 }
 
+export type CameraPresetId =
+  | 'initial'
+  | 'rotated'
+  | 'uxSign'
+  | 'gameSign'
+  | 'mailbox'
+  | 'closeupTrees'
+  | 'closeupProps';
+
 export interface CameraViewPreset {
-  id: 'initial' | 'rotated' | 'uxSign' | 'gameSign' | 'mailbox';
+  id: CameraPresetId;
   label: string;
   /** Azimuth angle in radians (horizontal orbit angle) */
   azimuth: number;
   /** Polar angle in radians (vertical angle from top) */
   polar: number;
-  /** Distance from target */
+  /** Distance from target on mobile portrait */
   distanceMobile: number;
+  /** Distance from target on desktop */
   distanceDesktop: number;
   /** Look-at target in world coordinates */
   target: [number, number, number];
@@ -48,31 +58,14 @@ export interface PersonalConfig {
     gamePortfolioPlaceholderMessage: string;
   };
   contact: {
-    /**
-     * Optional verified email address. Leave empty ("") if not yet configured.
-     * Never populate with fabricated data.
-     */
     email: string;
-    /**
-     * Optional verified LinkedIn profile URL. Leave empty ("") if not yet configured.
-     */
     linkedInUrl: string;
-    /**
-     * Optional verified phone number. Leave empty ("") if not yet configured.
-     */
     phone: string;
-    /**
-     * Optional location string. Leave empty ("") if not yet configured.
-     */
     location: string;
     vCardFileName: string;
     vCardNote: string;
   };
   nfc: {
-    /**
-     * Permanent HTTPS URL encoded into the physical NFC card NDEF URI record and production QR code.
-     * Leave empty ("") before final production domain assignment to use the active HTTPS origin or UX portfolio fallback.
-     */
     publicCardUrl: string;
     fallbackPortfolioUrl: string;
   };
@@ -85,7 +78,7 @@ export interface PersonalConfig {
     softChampagne: string;
   };
   qualityPresets: Record<QualityLevel, QualityPreset>;
-  cameraPresets: Record<CameraViewPreset['id'], CameraViewPreset>;
+  cameraPresets: Record<CameraPresetId, CameraViewPreset>;
 }
 
 export const PERSONAL_CONFIG: PersonalConfig = {
@@ -93,7 +86,7 @@ export const PERSONAL_CONFIG: PersonalConfig = {
     displayName: 'Evelyn Lin',
     professionalTitle: 'UX & Interactive Experience Designer',
     tagline: 'Designing thoughtful interactions and playful digital experiences.',
-    projectSubtitle: 'The Crossroads · Two Paths, One Designer',
+    projectSubtitle: 'The Crossroads',
   },
   destinations: {
     uxPortfolioLabel: 'UX Portfolio',
@@ -134,7 +127,7 @@ export const PERSONAL_CONFIG: PersonalConfig = {
       shadows: true,
       shadowMapSize: 2048,
       vegetationMultiplier: 1.0,
-      particlesCount: 36,
+      particlesCount: 22,
       enableWindAnimation: true,
       enableWaterShader: true,
     },
@@ -145,8 +138,8 @@ export const PERSONAL_CONFIG: PersonalConfig = {
       dpr: [1.25, 1.75],
       shadows: true,
       shadowMapSize: 1024,
-      vegetationMultiplier: 0.78,
-      particlesCount: 22,
+      vegetationMultiplier: 0.8,
+      particlesCount: 16,
       enableWindAnimation: true,
       enableWaterShader: true,
     },
@@ -158,7 +151,7 @@ export const PERSONAL_CONFIG: PersonalConfig = {
       shadows: false,
       shadowMapSize: 512,
       vegetationMultiplier: 0.45,
-      particlesCount: 10,
+      particlesCount: 8,
       enableWindAnimation: false,
       enableWaterShader: false,
     },
@@ -169,18 +162,18 @@ export const PERSONAL_CONFIG: PersonalConfig = {
       label: 'Crossroads View',
       azimuth: -0.05,
       polar: 1.03,
-      distanceMobile: 18.2,
-      distanceDesktop: 11.8,
-      target: [0, 0.42, 0.08],
+      distanceMobile: 18.4,
+      distanceDesktop: 12.1,
+      target: [0, 0.42, 0.05],
     },
     rotated: {
       id: 'rotated',
-      label: 'Stream & Bridge Angle',
+      label: 'Rotated Angle',
       azimuth: 0.38,
       polar: 0.99,
-      distanceMobile: 18.6,
-      distanceDesktop: 12.0,
-      target: [-0.08, 0.42, 0.05],
+      distanceMobile: 18.8,
+      distanceDesktop: 12.3,
+      target: [-0.06, 0.42, 0.04],
     },
     uxSign: {
       id: 'uxSign',
@@ -207,7 +200,25 @@ export const PERSONAL_CONFIG: PersonalConfig = {
       polar: 1.05,
       distanceMobile: 14.8,
       distanceDesktop: 9.4,
-      target: [0.55, 0.52, 1.05],
+      target: [0.65, 0.55, 0.95],
+    },
+    closeupTrees: {
+      id: 'closeupTrees',
+      label: 'Foliage & Trees Close-up',
+      azimuth: -0.24,
+      polar: 1.08,
+      distanceMobile: 9.6,
+      distanceDesktop: 7.4,
+      target: [-1.45, 1.65, -1.65],
+    },
+    closeupProps: {
+      id: 'closeupProps',
+      label: 'Signs & Mailbox Close-up',
+      azimuth: 0.22,
+      polar: 1.06,
+      distanceMobile: 8.8,
+      distanceDesktop: 6.4,
+      target: [0.68, 0.96, 0.32],
     },
   },
 };

@@ -45,7 +45,9 @@ function getInitialPresetFromUrl(): CameraViewPreset['id'] {
     view === 'rotated' ||
     view === 'uxSign' ||
     view === 'gameSign' ||
-    view === 'mailbox'
+    view === 'mailbox' ||
+    view === 'closeupTrees' ||
+    view === 'closeupProps'
   ) {
     return view;
   }
@@ -158,9 +160,9 @@ export const App: React.FC = () => {
               toneMappingExposure: 1.08,
             }}
             onCreated={({ gl, scene, camera, advance }) => {
-              gl.setClearColor('#132922', 1);
+              gl.setClearColor('#173229', 1);
               window.__r3fRenderNow = () => {
-                for (let i = 0; i < 30; i++) {
+                for (let i = 0; i < 36; i++) {
                   advance(performance.now() + i * 16);
                 }
                 gl.render(scene, camera);

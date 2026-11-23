@@ -30,53 +30,51 @@ export const WoodenSigns: React.FC<WoodenSignsProps> = ({
 
   const woodBump = useMemo(() => getWoodGrainTexture(), []);
   const uxPlaqueTex = useMemo(
-    () => getSignPlaqueTexture(PERSONAL_CONFIG.destinations.uxPortfolioLabel, 'left', 'evelynjlin.com'),
+    () => getSignPlaqueTexture(PERSONAL_CONFIG.destinations.uxPortfolioLabel, 'left'),
     []
   );
   const gamePlaqueTex = useMemo(
-    () =>
-      getSignPlaqueTexture(
-        PERSONAL_CONFIG.destinations.gamePortfolioLabel,
-        'right',
-        PERSONAL_CONFIG.destinations.gamePortfolioUrl ? 'Explore World' : 'In Progress'
-      ),
+    () => getSignPlaqueTexture(PERSONAL_CONFIG.destinations.gamePortfolioLabel, 'right'),
     []
   );
 
   const materials = useMemo(() => {
     return {
       post: new THREE.MeshStandardMaterial({
-        color: '#7A5030',
-        roughness: 0.7,
+        color: '#ffffff',
+        vertexColors: true,
+        roughness: 0.72,
+        metalness: 0.04,
+        bumpMap: woodBump,
+        bumpScale: 0.018,
+      }),
+      uxBoard: new THREE.MeshStandardMaterial({
+        color: '#ffffff',
+        vertexColors: true,
+        roughness: 0.62,
         metalness: 0.04,
         bumpMap: woodBump,
         bumpScale: 0.016,
       }),
-      uxBoard: new THREE.MeshStandardMaterial({
-        color: '#5B3920',
-        roughness: 0.58,
-        metalness: 0.05,
-        bumpMap: woodBump,
-        bumpScale: 0.014,
-      }),
       gameBoard: new THREE.MeshStandardMaterial({
-        color: '#5B3920',
-        roughness: 0.58,
-        metalness: 0.05,
+        color: '#ffffff',
+        vertexColors: true,
+        roughness: 0.62,
+        metalness: 0.04,
         bumpMap: woodBump,
-        bumpScale: 0.014,
+        bumpScale: 0.016,
       }),
       uxLettering: new THREE.MeshStandardMaterial({
-        color: '#FAF6EC',
-        emissive: '#F4E5C2',
-        emissiveIntensity: 0.28,
-        roughness: 0.32,
+        color: '#F5EFE2',
+        emissive: '#EAD8B1',
+        emissiveIntensity: 0.16,
+        roughness: 0.36,
       }),
       gameLettering: new THREE.MeshStandardMaterial({
-        color: '#FAF6EC',
-        emissive: '#F4E5C2',
-        emissiveIntensity: 0.28,
-        roughness: 0.32,
+        color: '#F5EFE2',
+        emissive: '#EAD8B1',
+        emissiveIntensity: 0.16,
+        roughness: 0.36,
       }),
     };
   }, [woodBump]);
@@ -90,42 +88,41 @@ export const WoodenSigns: React.FC<WoodenSignsProps> = ({
     const isUxActive = uxHovered || activeHover === 'ux';
     const isGameActive = gameHovered || activeHover === 'game';
 
-    // Restrained physical glow & subtle lift on focus/hover
-    materials.uxBoard.emissive.set(isUxActive ? '#523418' : '#000000');
+    materials.uxBoard.emissive.set(isUxActive ? '#4A2E14' : '#000000');
     materials.uxBoard.emissiveIntensity = THREE.MathUtils.lerp(
       materials.uxBoard.emissiveIntensity,
-      isUxActive ? 0.55 : 0.0,
+      isUxActive ? 0.45 : 0.0,
       delta * 8
     );
     materials.uxLettering.emissiveIntensity = THREE.MathUtils.lerp(
       materials.uxLettering.emissiveIntensity,
-      isUxActive ? 0.75 : 0.28,
+      isUxActive ? 0.62 : 0.16,
       delta * 8
     );
 
-    materials.gameBoard.emissive.set(isGameActive ? '#523418' : '#000000');
+    materials.gameBoard.emissive.set(isGameActive ? '#4A2E14' : '#000000');
     materials.gameBoard.emissiveIntensity = THREE.MathUtils.lerp(
       materials.gameBoard.emissiveIntensity,
-      isGameActive ? 0.55 : 0.0,
+      isGameActive ? 0.45 : 0.0,
       delta * 8
     );
     materials.gameLettering.emissiveIntensity = THREE.MathUtils.lerp(
       materials.gameLettering.emissiveIntensity,
-      isGameActive ? 0.75 : 0.28,
+      isGameActive ? 0.62 : 0.16,
       delta * 8
     );
 
     if (uxGroupRef.current) {
       uxGroupRef.current.position.y = THREE.MathUtils.lerp(
         uxGroupRef.current.position.y,
-        isUxActive ? 0.04 : 0.0,
+        isUxActive ? 0.035 : 0.0,
         delta * 9
       );
     }
     if (gameGroupRef.current) {
       gameGroupRef.current.position.y = THREE.MathUtils.lerp(
         gameGroupRef.current.position.y,
-        isGameActive ? 0.04 : 0.0,
+        isGameActive ? 0.035 : 0.0,
         delta * 9
       );
     }
@@ -142,7 +139,7 @@ export const WoodenSigns: React.FC<WoodenSignsProps> = ({
         e.clientX - pointerDownPos.current.x,
         e.clientY - pointerDownPos.current.y
       );
-      if (dist > 10) return; // Ignore camera orbit drags
+      if (dist > 10) return;
     }
     onSelectSign(id);
   };
@@ -183,25 +180,26 @@ export const WoodenSigns: React.FC<WoodenSignsProps> = ({
           />
         )}
 
-        {/* Flush back-side plaque so label stays readable even at extreme orbit angles */}
-        <mesh position={[-1.52, 1.38, -0.66]} rotation={[0, Math.PI + THREE.MathUtils.degToRad(16), 0]}>
-          <planeGeometry args={[1.42, 0.42]} />
-          <meshStandardMaterial map={uxPlaqueTex} roughness={0.5} />
+        {/* Flush back-side plaque so label stays readable if orbited from behind */}
+        <mesh
+          position={[-1.58, 1.42, -0.62]}
+          rotation={[0, Math.PI + THREE.MathUtils.degToRad(18), 0]}
+        >
+          <planeGeometry args={[1.38, 0.38]} />
+          <meshStandardMaterial map={uxPlaqueTex} roughness={0.55} />
         </mesh>
 
-        {/* Subtle warm ground highlight ring when hovered/focused */}
         {(uxHovered || activeHover === 'ux') && (
-          <mesh position={[-1.52, 0.25, -0.66]} rotation={[-Math.PI / 2, 0, 0]}>
-            <ringGeometry args={[0.32, 0.46, 32]} />
-            <meshBasicMaterial color="#DCC99D" transparent opacity={0.65} side={THREE.DoubleSide} />
+          <mesh position={[-1.58, 0.28, -0.62]} rotation={[-Math.PI / 2, 0, 0]}>
+            <ringGeometry args={[0.3, 0.43, 32]} />
+            <meshBasicMaterial color="#DCC99D" transparent opacity={0.62} side={THREE.DoubleSide} />
           </mesh>
         )}
 
-        {/* Large invisible click/tap hitbox for reliable smartphone touch */}
         <mesh
           name="Hitbox_Sign_UX"
-          position={[-1.52, 1.26, -0.60]}
-          rotation={[0, THREE.MathUtils.degToRad(16), 0]}
+          position={[-1.58, 1.3, -0.56]}
+          rotation={[0, THREE.MathUtils.degToRad(18), 0]}
           onPointerDown={handlePointerDown}
           onClick={(e) => handleSignClick(e, 'ux')}
           onPointerOver={(e) => {
@@ -247,25 +245,25 @@ export const WoodenSigns: React.FC<WoodenSignsProps> = ({
           />
         )}
 
-        {/* Flush back-side plaque */}
-        <mesh position={[1.52, 1.38, -0.66]} rotation={[0, Math.PI - THREE.MathUtils.degToRad(16), 0]}>
-          <planeGeometry args={[1.42, 0.42]} />
-          <meshStandardMaterial map={gamePlaqueTex} roughness={0.5} />
+        <mesh
+          position={[1.58, 1.4, -0.58]}
+          rotation={[0, Math.PI - THREE.MathUtils.degToRad(18), 0]}
+        >
+          <planeGeometry args={[1.38, 0.38]} />
+          <meshStandardMaterial map={gamePlaqueTex} roughness={0.55} />
         </mesh>
 
-        {/* Subtle warm ground highlight ring when hovered/focused */}
         {(gameHovered || activeHover === 'game') && (
-          <mesh position={[1.52, 0.25, -0.66]} rotation={[-Math.PI / 2, 0, 0]}>
-            <ringGeometry args={[0.32, 0.46, 32]} />
-            <meshBasicMaterial color="#DCC99D" transparent opacity={0.65} side={THREE.DoubleSide} />
+          <mesh position={[1.58, 0.27, -0.58]} rotation={[-Math.PI / 2, 0, 0]}>
+            <ringGeometry args={[0.3, 0.43, 32]} />
+            <meshBasicMaterial color="#DCC99D" transparent opacity={0.62} side={THREE.DoubleSide} />
           </mesh>
         )}
 
-        {/* Large invisible click/tap hitbox for reliable smartphone touch */}
         <mesh
           name="Hitbox_Sign_Game"
-          position={[1.52, 1.26, -0.60]}
-          rotation={[0, THREE.MathUtils.degToRad(-16), 0]}
+          position={[1.58, 1.28, -0.52]}
+          rotation={[0, THREE.MathUtils.degToRad(-18), 0]}
           onPointerDown={handlePointerDown}
           onClick={(e) => handleSignClick(e, 'game')}
           onPointerOver={(e) => {
