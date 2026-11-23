@@ -37,7 +37,7 @@ export const Stream: React.FC<StreamProps> = ({ nodes, enableWaterShader }) => {
     if (!enableWaterShader) return;
     const t = clock.getElapsedTime();
     if (waterMatRef.current) {
-      waterMatRef.current.roughness = 0.22 + 0.04 * Math.sin(t * 1.8);
+      waterMatRef.current.roughness = 0.56 + 0.04 * Math.sin(t * 1.8);
     }
     if (rippleGroupRef.current) {
       rippleGroupRef.current.children.forEach((child, idx) => {
@@ -59,15 +59,15 @@ export const Stream: React.FC<StreamProps> = ({ nodes, enableWaterShader }) => {
         </mesh>
       )}
 
-      {/* Widened Translucent Creek Water with Depth Variation & Soft Reflections */}
+      {/* Widened Translucent Creek Water with Depth Variation & Controlled Soft Specular */}
       {waterGeo && (
         <mesh name="Stream_Water" geometry={waterGeo} receiveShadow>
           <meshStandardMaterial
             ref={waterMatRef}
             color="#ffffff"
             vertexColors
-            roughness={0.22}
-            metalness={0.08}
+            roughness={0.56}
+            metalness={0.0}
             transparent
             opacity={0.86}
           />

@@ -134,6 +134,7 @@ def add_beveled_box(bm, transform_fn, bevel_offset=0.010, segments=2):
             offset=bevel_offset,
             segments=segments,
             affect='EDGES',
+            clamp_overlap=True,
         )
 
 
@@ -543,9 +544,9 @@ def build_island_terrain_and_trails(materials):
 
     add_beveled_box(
         bm_outcrops,
-        lambda co: plaque_to_world(co.x * 2.86, co.z * 0.80, -0.06 + co.y * 0.34),
-        bevel_offset=0.042,
-        segments=3,
+        lambda co: plaque_to_world(co.x * 2.84, co.z * 0.78, -0.04 + co.y * 0.28),
+        bevel_offset=0.016,
+        segments=2,
     )
 
     finalize_mesh_object("Island_Soil_Rim", bm_outcrops, materials["rock_underside"], rock_color_fn)
@@ -621,8 +622,8 @@ def build_embedded_identity_plaque(materials):
     add_beveled_box(
         bm_frame,
         lambda co: to_world(co.x * 2.66, co.z * 0.68, 0.09 + co.y * 0.10),
-        bevel_offset=0.020,
-        segments=3,
+        bevel_offset=0.010,
+        segments=2,
     )
     for rx_s in (-1.20, 1.20):
         for ry_s in (-0.23, 0.23):
@@ -631,9 +632,9 @@ def build_embedded_identity_plaque(materials):
                 lambda co, rxs=rx_s, rys=ry_s: to_world(
                     rxs + co.x * 0.042,
                     rys + co.z * 0.042,
-                    0.155 + co.y * 0.028,
+                    0.152 + co.y * 0.025,
                 ),
-                bevel_offset=0.007,
+                bevel_offset=0.004,
                 segments=2,
             )
     finalize_mesh_object("Identity_Plaque_Frame", bm_frame, materials["champagne_brass"])
@@ -641,8 +642,8 @@ def build_embedded_identity_plaque(materials):
     bm_plate = bmesh.new()
     add_beveled_box(
         bm_plate,
-        lambda co: to_world(co.x * 2.50, co.z * 0.55, 0.115 + co.y * 0.08),
-        bevel_offset=0.014,
+        lambda co: to_world(co.x * 2.52, co.z * 0.56, 0.112 + co.y * 0.08),
+        bevel_offset=0.008,
         segments=2,
     )
     finalize_mesh_object("Identity_Plaque_Plate", bm_plate, materials["mailbox_forest_metal"])
@@ -774,23 +775,23 @@ def add_sculpted_leaf_mass_with_sprays(
         dir_z = math.cos(lat) * math.sin(lon)
         dir_y = math.sin(lat)
 
-        anchor_lx = dir_x * rx * 0.84
-        anchor_ly = dir_y * ry * (0.90 if dir_y >= 0 else 0.55)
-        anchor_lz = dir_z * rz * 0.84
+        anchor_lx = dir_x * rx * 0.78
+        anchor_ly = dir_y * ry * (0.84 if dir_y >= 0 else 0.52)
+        anchor_lz = dir_z * rz * 0.78
 
-        # Create a 3D sculpted leaf-bundle tuft (subdivision-1 icosphere shaped into an arched leaf-fan pad)
-        ret_tuft = bmesh.ops.create_icosphere(bm, subdivisions=1, radius=1.0)
+        # Create a smooth 3D sculpted leaf-cluster dome/spray (subdivisions=2 for smooth organic curves)
+        ret_tuft = bmesh.ops.create_icosphere(bm, subdivisions=2, radius=1.0)
         tx_d, tz_d = -math.sin(lon), math.cos(lon)
-        tuft_len = leaf_scale * (0.92 + 0.25 * ((ifan % 3) * 0.5))
-        tuft_wid = tuft_len * 0.72
-        tuft_thick = tuft_len * 0.34
+        tuft_len = leaf_scale * (1.05 + 0.25 * ((ifan % 3) * 0.5))
+        tuft_wid = tuft_len * 0.82
+        tuft_thick = tuft_len * 0.44
 
         for vt in ret_tuft["verts"]:
             pt = vt.co
-            # Taper base and tip into a natural leaf-spray fan
-            forward = pt.x * 0.5 + 0.35
-            fan_spread = 1.0 + 0.35 * forward
-            arch_droop = -0.18 * (forward ** 2) * tuft_len
+            n_t = noise.noise(Vector((pt.x * 2.2 + ifan, pt.y * 2.2 - ifan, pt.z * 2.2)))
+            forward = pt.x * 0.5 + 0.25
+            fan_spread = (1.0 + 0.22 * forward) * (1.0 + 0.12 * n_t)
+            arch_droop = -0.14 * (max(0.0, forward) ** 1.8) * tuft_len
             lx_t = (
                 anchor_lx
                 + dir_x * (forward * tuft_len)
@@ -803,8 +804,8 @@ def add_sculpted_leaf_mass_with_sprays(
             )
             ly_t = (
                 anchor_ly
-                + dir_y * (forward * tuft_len * 0.65)
-                + pt.z * tuft_thick
+                + dir_y * (forward * tuft_len * 0.60)
+                + pt.z * tuft_thick * (1.08 if pt.z >= 0 else 0.65)
                 + arch_droop
             )
             vt.co = local_to_world(lx_t, ly_t, lz_t)
@@ -1181,14 +1182,14 @@ def create_tree_archetype_cedar(name, x, z, scale, lean_x, lean_z, palette_mode,
                 az_f = pz + fz_d * pl * 0.42
                 ay_f = py
 
-                ret_nf = bmesh.ops.create_icosphere(bm_canopy, subdivisions=1, radius=1.0)
+                ret_nf = bmesh.ops.create_icosphere(bm_canopy, subdivisions=2, radius=1.0)
                 for vnf in ret_nf["verts"]:
                     pnf = vnf.co
-                    fwd = pnf.x * 0.5 + 0.45
-                    droop_nf = -0.22 * (max(0.0, fwd) ** 1.8) * f_len
-                    wx_nf = ax_f + fx_d * (fwd * f_len) + ftx * (pnf.y * f_wid * (1.0 - 0.3 * fwd))
-                    wz_nf = az_f + fz_d * (fwd * f_len) + ftz * (pnf.y * f_wid * (1.0 - 0.3 * fwd))
-                    wy_nf = ay_f + pnf.z * f_thick + droop_nf
+                    fwd = pnf.x * 0.5 + 0.35
+                    droop_nf = -0.18 * (max(0.0, fwd) ** 1.7) * f_len
+                    wx_nf = ax_f + fx_d * (fwd * f_len) + ftx * (pnf.y * f_wid * (1.0 - 0.25 * fwd))
+                    wz_nf = az_f + fz_d * (fwd * f_len) + ftz * (pnf.y * f_wid * (1.0 - 0.25 * fwd))
+                    wy_nf = ay_f + pnf.z * f_thick * (1.05 if pnf.z >= 0 else 0.55) + droop_nf
                     vnf.co = Vector((wx_nf, -wz_nf, wy_nf))
 
     # Tapered evergreen crown leader spire at the very top
@@ -1714,6 +1715,7 @@ def build_woodland_mailbox(x, z, yaw_deg, materials):
                 rings[il + 1][ip],
             ))
     bm_body.faces.new(rings[0][::-1])
+    bm_body.faces.new(rings[-1])
     finalize_mesh_object("Mailbox_Body", bm_body, materials["mailbox_forest_metal"])
 
     bm_door = bmesh.new()
