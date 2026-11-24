@@ -188,9 +188,13 @@ class SnapshotRunner: NSObject, WKNavigationDelegate {
         await loadUrl("\(baseUrl)/?view=closeupPlaque")
         await saveSnapshot(filenames: ["12_closeup_identity_plaque.png"])
 
-        // 16. Close-up of the mailbox and its lower support/base
-        await loadUrl("\(baseUrl)/?view=closeupMailboxBase")
-        await saveSnapshot(filenames: ["16_closeup_mailbox_and_base.png"])
+        // 16. Close-up of the mailbox and its lower support/base (Main Angle)
+        await loadUrl("\(baseUrl)/?view=closeupMailboxBase&time=midday")
+        await saveSnapshot(filenames: ["16_closeup_mailbox_and_base.png", "mailbox_polish_01_main_closeup.png"])
+
+        // 17. Side-angle close-up of the mailbox showing the flag and open-door structure
+        await loadUrl("\(baseUrl)/?view=closeupMailboxSide&time=midday")
+        await saveSnapshot(filenames: ["17_closeup_mailbox_side_flag_door.png", "mailbox_polish_02_side_flag_and_door.png"])
 
         // 17-20. Time-of-Day Atmospheric Lighting Views (America/Toronto: Morning, Midday, Golden Hour, Evening/Night)
         setupWindow(width: 1440, height: 900, isMobile: false)

@@ -54,24 +54,25 @@ export const Mailbox: React.FC<MailboxProps> = ({
         side: THREE.FrontSide,
       }),
       body: new THREE.MeshStandardMaterial({
-        color: '#1E4A3B',
-        roughness: 0.42,
+        color: '#ffffff',
+        vertexColors: true,
+        roughness: 0.38,
         metalness: 0.24,
         transparent: false,
         opacity: 1.0,
         depthWrite: true,
         depthTest: true,
-        side: THREE.FrontSide,
+        side: THREE.DoubleSide,
       }),
       brass: new THREE.MeshStandardMaterial({
-        color: '#E0CB9B',
+        color: '#DFCA9A',
         roughness: 0.32,
-        metalness: 0.68,
+        metalness: 0.66,
         transparent: false,
         opacity: 1.0,
         depthWrite: true,
         depthTest: true,
-        side: THREE.FrontSide,
+        side: THREE.DoubleSide,
       }),
       letter: new THREE.MeshStandardMaterial({
         color: '#FAF5E8',
@@ -104,16 +105,16 @@ export const Mailbox: React.FC<MailboxProps> = ({
     const isActive = hovered || activeHover === 'mailbox' || isOpen;
     const t = clock.getElapsedTime();
 
-    materials.body.emissive.set(isActive ? '#173A2E' : '#000000');
+    materials.body.emissive.set(isActive ? '#14352A' : '#000000');
     materials.body.emissiveIntensity = THREE.MathUtils.lerp(
       materials.body.emissiveIntensity,
-      isActive ? 0.45 : 0.0,
+      isActive ? 0.36 : 0.0,
       delta * 8
     );
     materials.brass.emissive.set(isActive ? '#8C7345' : '#000000');
     materials.brass.emissiveIntensity = THREE.MathUtils.lerp(
       materials.brass.emissiveIntensity,
-      isActive ? 0.38 : 0.0,
+      isActive ? 0.34 : 0.0,
       delta * 8
     );
 
@@ -126,8 +127,8 @@ export const Mailbox: React.FC<MailboxProps> = ({
     }
 
     if (doorRef.current) {
-      const targetOffsetY = isOpen ? -0.05 : hovered ? -0.015 : 0.0;
-      const targetOffsetZ = isOpen ? 0.06 : hovered ? 0.02 : 0.0;
+      const targetOffsetY = isOpen ? -0.024 : hovered ? -0.008 : 0.0;
+      const targetOffsetZ = isOpen ? 0.036 : hovered ? 0.012 : 0.0;
       doorRef.current.position.y = THREE.MathUtils.lerp(
         doorRef.current.position.y,
         targetOffsetY,
@@ -141,8 +142,8 @@ export const Mailbox: React.FC<MailboxProps> = ({
     }
 
     if (letterGroupRef.current) {
-      const targetZ = isOpen ? 0.18 : hovered ? 0.06 : 0.0;
-      const targetY = isOpen ? 0.09 + Math.sin(t * 2.5) * 0.015 : hovered ? 0.03 : 0.0;
+      const targetZ = isOpen ? 0.15 : hovered ? 0.05 : 0.0;
+      const targetY = isOpen ? 0.04 + Math.sin(t * 2.5) * 0.01 : hovered ? 0.015 : 0.0;
       letterGroupRef.current.position.z = THREE.MathUtils.lerp(
         letterGroupRef.current.position.z,
         targetZ,
@@ -178,6 +179,8 @@ export const Mailbox: React.FC<MailboxProps> = ({
   const letterGeo = getGeometry('Mailbox_Letter');
   const flagGeo = getGeometry('Mailbox_Flag');
 
+  const showEmergingLetter = isOpen || hovered || activeHover === 'mailbox';
+
   return (
     <group ref={groupRef} name="WoodlandMailboxInteractive">
       {postGeo && (
@@ -202,6 +205,7 @@ export const Mailbox: React.FC<MailboxProps> = ({
           geometry={doorGeo}
           material={materials.brass}
           castShadow={shadows}
+          receiveShadow={shadows}
         />
       )}
       {flagGeo && (
@@ -209,11 +213,16 @@ export const Mailbox: React.FC<MailboxProps> = ({
           geometry={flagGeo}
           material={materials.brass}
           castShadow={shadows}
+          receiveShadow={shadows}
         />
       )}
 
-      {/* Emerging folded contact letter with crimson wax seal */}
-      <group ref={letterGroupRef} name="EmergingContactLetter">
+      {/* Emerging folded contact letter inside the recessed cavity (glides out when hovered/opened) */}
+      <group
+        ref={letterGroupRef}
+        name="EmergingContactLetter"
+        visible={showEmergingLetter}
+      >
         {letterGeo && (
           <mesh
             geometry={letterGeo}
@@ -221,8 +230,8 @@ export const Mailbox: React.FC<MailboxProps> = ({
             castShadow={shadows}
           />
         )}
-        <mesh position={[1.18, 1.35, 1.54]} rotation={[0.25, -0.38, 0]}>
-          <cylinderGeometry args={[0.034, 0.034, 0.015, 16]} />
+        <mesh position={[1.23, 1.18, 1.48]} rotation={[0.08, -0.38, 0]}>
+          <cylinderGeometry args={[0.026, 0.026, 0.010, 16]} />
           <primitive object={materials.waxSeal} attach="material" />
         </mesh>
       </group>

@@ -27,7 +27,8 @@ export type CameraPresetId =
   | 'closeupBridgeApproaches'
   | 'closeupCreekWater'
   | 'closeupPlaque'
-  | 'closeupMailboxBase';
+  | 'closeupMailboxBase'
+  | 'closeupMailboxSide';
 
 export interface CameraViewPreset {
   id: CameraPresetId;
@@ -288,11 +289,20 @@ export const PERSONAL_CONFIG: PersonalConfig = {
     closeupMailboxBase: {
       id: 'closeupMailboxBase',
       label: 'Mailbox & Lower Support Base Close-up',
-      azimuth: -0.20,
-      polar: 1.06,
-      distanceMobile: 5.4,
-      distanceDesktop: 3.8,
-      target: [1.24, 0.78, 1.36],
+      azimuth: -0.16,
+      polar: 1.05,
+      distanceMobile: 4.8,
+      distanceDesktop: 3.3,
+      target: [1.26, 0.88, 1.36],
+    },
+    closeupMailboxSide: {
+      id: 'closeupMailboxSide',
+      label: 'Mailbox Side Flag & Open-Door Structure Close-up',
+      azimuth: 0.62,
+      polar: 1.02,
+      distanceMobile: 4.6,
+      distanceDesktop: 3.1,
+      target: [1.28, 1.06, 1.36],
     },
   },
 };
