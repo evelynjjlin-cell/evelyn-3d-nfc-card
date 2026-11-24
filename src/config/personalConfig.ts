@@ -110,8 +110,8 @@ export const PERSONAL_CONFIG: PersonalConfig = {
       'Game Worlds — Evelyn’s dedicated Game UX, interactive environments, and game-inspired design portfolio is currently being crafted. In the meantime, explore Design Stories on her Design Trail or save her contact card below.',
   },
   contact: {
-    email: '',
-    linkedInUrl: '',
+    email: 'evelyn.jj.lin@gmail.com',
+    linkedInUrl: 'https://www.linkedin.com/in/evelyn-j-lin/',
     phone: '',
     location: '',
     vCardFileName: 'Evelyn-Lin.vcf',
@@ -119,7 +119,7 @@ export const PERSONAL_CONFIG: PersonalConfig = {
       'Evelyn Lin — UX & Interactive Experience Designer. Designing thoughtful interactions and playful digital experiences.',
   },
   nfc: {
-    publicCardUrl: '',
+    publicCardUrl: 'https://card.evelynjlin.com',
     fallbackPortfolioUrl: 'https://evelynjlin.com',
   },
   palette: {
