@@ -1,11 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { PERSONAL_CONFIG, getResolvedCardUrl } from '../../config/personalConfig';
-import {
-  copyCardLink,
-  downloadVCard,
-  generateQrCodeDataUrl,
-  shareDigitalCard,
-} from '../../utils/nfcAndVcard';
+import { downloadVCard, generateQrCodeDataUrl } from '../../utils/nfcAndVcard';
 
 interface ContactPanelProps {
   isOpen: boolean;
@@ -18,10 +13,11 @@ export const ContactPanel: React.FC<ContactPanelProps> = ({
   onClose,
   onStatusToast,
 }) => {
-  const { identity, destinations, contact } = PERSONAL_CONFIG;
-  const [qrDataUrl, setQrDataUrl] = useState<string>('');
+  const { identity, contact } = PERSONAL_CONFIG;
+  const [qrDataUrl, setQrDataUrl] = useState('');
   const [localFeedback, setLocalFeedback] = useState<string | null>(null);
-
+  const panelRef = useRef<HTMLElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
   const resolvedCard = getResolvedCardUrl();
 
   useEffect(() => {
@@ -41,171 +37,130 @@ export const ContactPanel: React.FC<ContactPanelProps> = ({
 
   useEffect(() => {
     if (!isOpen) return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+    const previousFocus = document.activeElement;
+    setLocalFeedback(null);
+    closeButtonRef.current?.focus({ preventScroll: true });
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        onClose();
+        return;
+      }
+      if (event.key !== 'Tab') return;
+
+      const panel = panelRef.current;
+      const focusable = panel?.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      );
+      if (!panel || !focusable?.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      const focusIsOutside = !panel.contains(document.activeElement);
+
+      if (event.shiftKey && (document.activeElement === first || focusIsOutside)) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && (document.activeElement === last || focusIsOutside)) {
+        event.preventDefault();
+        first.focus();
+      }
     };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      if (previousFocus instanceof HTMLElement && previousFocus.isConnected) {
+        previousFocus.focus({ preventScroll: true });
+      }
+    };
   }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
-  const notify = (msg: string) => {
-    setLocalFeedback(msg);
-    onStatusToast(msg);
-  };
-
   const handleSaveVCard = () => {
-    const res = downloadVCard();
-    notify(res.message);
-  };
-
-  const handleShare = async () => {
-    const res = await shareDigitalCard();
-    notify(res.message);
-  };
-
-  const handleCopy = async () => {
-    const res = await copyCardLink();
-    notify(res.message);
+    const result = downloadVCard();
+    setLocalFeedback(result.success ? 'Open the downloaded file to save my contact.' : result.message);
+    onStatusToast(result.message);
   };
 
   return (
-    <div
-      className="modal-backdrop"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="contact-panel-title"
-      onClick={onClose}
-    >
-      {/* Physical-Looking Unfolded Cream-Parchment Woodland Letter */}
-      <article className="parchment-letter-card" onClick={(e) => e.stopPropagation()}>
-        <div className="letter-inner-border">
-          {/* Top Wax Seal Emblem & Close Button */}
-          <div className="letter-top-bar">
-            <div className="wax-seal-badge" aria-hidden="true">
-              <span>EL</span>
-            </div>
-            <span className="letter-postmark">THE CROSSROADS · WOODLAND POST</span>
-            <button
-              type="button"
-              className="letter-close-btn"
-              onClick={onClose}
-              aria-label="Fold and close letter"
-              title="Close letter"
-            >
-              ✕
-            </button>
-          </div>
+    <div className="modal-backdrop contact-backdrop" onClick={onClose}>
+      <article
+        ref={panelRef}
+        className="parchment-letter-card"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="contact-panel-title"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="letter-top-bar">
+          <img
+            src="/brand/evelyn-orbit.svg"
+            alt="Evelyn Lin's logo"
+            className="letter-brand-mark"
+            width={48}
+            height={56}
+          />
+          <button
+            ref={closeButtonRef}
+            type="button"
+            className="letter-close-btn"
+            onClick={onClose}
+            aria-label="Close contact letter"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="m6 6 12 12M18 6 6 18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+          </button>
+        </div>
 
-          {/* Letter Salutation & Identity */}
-          <header className="letter-identity">
-            <h2 id="contact-panel-title" className="letter-name">
-              {identity.displayName}
-            </h2>
-            <p className="letter-role">{identity.professionalTitle}</p>
-            <p className="letter-quote">“{identity.tagline}”</p>
-          </header>
+        <header className="letter-identity">
+          <h2 id="contact-panel-title" className="letter-name">{identity.displayName}</h2>
+          <p className="letter-role">{identity.professionalTitle}</p>
+          <p className="letter-quote">{identity.tagline}</p>
+        </header>
 
-          <hr className="letter-fold-crease" aria-hidden="true" />
-
-          {/* Contact & Portfolio Actions */}
-          <div className="letter-actions-grid">
-            <button
-              type="button"
-              className="letter-btn letter-btn-primary"
-              onClick={handleSaveVCard}
-            >
-              <span aria-hidden="true">↓</span>
-              <span>Save Contact (.vcf)</span>
-            </button>
-
+        <div className="letter-contact-links">
+          {contact.email.trim() && (
+            <a href={`mailto:${contact.email.trim()}`} className="letter-contact-link">
+              {contact.email.trim()}
+            </a>
+          )}
+          {contact.linkedInUrl.trim() && (
             <a
-              href={destinations.uxPortfolioUrl}
+              href={contact.linkedInUrl.trim()}
               target="_blank"
               rel="noopener noreferrer"
-              className="letter-btn letter-btn-secondary"
+              className="letter-contact-link"
             >
-              <span>{destinations.uxPortfolioLabel}</span>
-              <span aria-hidden="true">↗</span>
+              LinkedIn <span aria-hidden="true">↗</span>
             </a>
-
-            {destinations.gamePortfolioUrl.trim() && (
-              <a
-                href={destinations.gamePortfolioUrl.trim()}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="letter-btn letter-btn-secondary"
-              >
-                <span>{destinations.gamePortfolioLabel}</span>
-                <span aria-hidden="true">↗</span>
-              </a>
-            )}
-
-            {contact.email.trim() && (
-              <a
-                href={`mailto:${contact.email.trim()}`}
-                className="letter-btn letter-btn-secondary"
-              >
-                <span>{contact.email.trim()}</span>
-              </a>
-            )}
-
-            {contact.linkedInUrl.trim() && (
-              <a
-                href={contact.linkedInUrl.trim()}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="letter-btn letter-btn-secondary"
-              >
-                <span>LinkedIn</span>
-              </a>
-            )}
-
-            <button
-              type="button"
-              className="letter-btn letter-btn-outline"
-              onClick={handleShare}
-            >
-              <span>Share Card</span>
-            </button>
-
-            <button
-              type="button"
-              className="letter-btn letter-btn-outline"
-              onClick={handleCopy}
-            >
-              <span>Copy Link</span>
-            </button>
-          </div>
-
-          {localFeedback && (
-            <div className="letter-feedback" role="status">
-              {localFeedback}
-            </div>
           )}
-
-          {/* Postage Stamp QR Footer */}
-          <footer className="letter-qr-footer">
-            {qrDataUrl && (
-              <div className="stamp-frame">
-                <img
-                  src={qrDataUrl}
-                  alt={`QR Code for ${identity.displayName}`}
-                  className="letter-qr-img"
-                  width={96}
-                  height={96}
-                />
-              </div>
-            )}
-            <div className="letter-qr-copy">
-              <span className="letter-qr-heading">Tap or Scan to Keep</span>
-              <p className="letter-qr-text">
-                Point any smartphone camera at this stamp or tap the NFC card to revisit Evelyn’s forest crossroads.
-              </p>
-            </div>
-          </footer>
         </div>
+
+        <footer className="letter-save-footer">
+          <button type="button" className="letter-save-btn" onClick={handleSaveVCard}>
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M12 4v12m-5-5 5 5 5-5M5 20h14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            <span>Save Contact</span>
+          </button>
+          {qrDataUrl && (
+            <figure className="letter-qr">
+              <img
+                src={qrDataUrl}
+                alt={`QR code to reopen ${identity.displayName}'s digital card`}
+                className="letter-qr-img"
+                width={96}
+                height={96}
+              />
+              <figcaption>Scan to revisit</figcaption>
+            </figure>
+          )}
+        </footer>
+
+        {localFeedback && <p className="letter-feedback" role="status">{localFeedback}</p>}
       </article>
     </div>
   );

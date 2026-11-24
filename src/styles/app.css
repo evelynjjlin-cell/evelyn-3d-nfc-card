@@ -267,247 +267,227 @@ body,
   }
 }
 
-/* Physical Unfolded Cream-Parchment Woodland Letter Card */
+/* A quiet contact letter, using Evelyn's portfolio identity. */
+.contact-backdrop {
+  padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+}
+
 .parchment-letter-card {
   width: 100%;
-  max-width: 410px;
-  max-height: 90dvh;
+  max-width: 420px;
+  max-height: calc(100dvh - max(16px, env(safe-area-inset-top)) - max(16px, env(safe-area-inset-bottom)));
   overflow-y: auto;
-  background: linear-gradient(
-    168deg,
-    #fbf7ec 0%,
-    #f3ead6 48%,
-    #efe3ca 50%,
-    #f7f0e0 100%
-  );
+  overscroll-behavior: contain;
+  background: #faf7ef;
   color: var(--parchment-ink);
-  border-radius: 14px;
-  padding: 10px;
-  box-shadow:
-    0 26px 64px rgba(5, 14, 11, 0.65),
-    0 2px 6px rgba(0, 0, 0, 0.25),
-    inset 0 0 24px rgba(165, 119, 82, 0.16);
-  border: 1px solid #d7c39d;
+  border: 1px solid rgba(215, 195, 157, 0.6);
+  border-radius: 12px;
+  padding: 26px 30px 28px;
+  box-shadow: 0 24px 72px rgba(5, 14, 11, 0.38);
   user-select: text;
   -webkit-user-select: text;
-  animation: unfoldLetter 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+  animation: unfoldLetter 0.24s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @keyframes unfoldLetter {
   from {
     opacity: 0;
-    transform: translateY(18px) scale(0.95) rotateX(8deg);
+    transform: translateY(12px);
   }
   to {
     opacity: 1;
-    transform: translateY(0) scale(1) rotateX(0);
+    transform: translateY(0);
   }
-}
-
-.letter-inner-border {
-  border: 1px solid rgba(138, 102, 66, 0.35);
-  border-radius: 10px;
-  padding: 16px 18px 18px;
-  position: relative;
 }
 
 .letter-top-bar {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 10px;
+  gap: 16px;
+  margin-bottom: 22px;
 }
 
-.wax-seal-badge {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 35% 32%, #b83b35 0%, #872420 68%, #5e1714 100%);
-  border: 2px solid #cfa86e;
-  box-shadow: 0 3px 8px rgba(94, 23, 20, 0.38);
-  color: #f7ead0;
-  font-family: var(--font-display);
-  font-size: 0.92rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.letter-postmark {
-  font-size: 0.58rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: #7d6245;
-  text-align: center;
+.letter-brand-mark {
+  display: block;
+  width: 48px;
+  height: 56px;
+  object-fit: contain;
 }
 
 .letter-close-btn {
   appearance: none;
-  border: 1px solid rgba(125, 98, 69, 0.32);
-  background: rgba(125, 98, 69, 0.08);
-  color: #4a3a28;
-  width: 30px;
-  height: 30px;
+  border: 0;
+  background: transparent;
+  color: #59665d;
+  width: 44px;
+  height: 44px;
+  margin: -8px -12px 0 0;
   border-radius: 50%;
-  cursor: pointer;
-  font-size: 0.82rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  cursor: pointer;
 }
 
 .letter-close-btn:hover {
-  background: rgba(125, 98, 69, 0.18);
+  background: rgba(24, 58, 46, 0.06);
 }
 
 .letter-identity {
-  text-align: center;
-  margin-bottom: 12px;
+  text-align: left;
 }
 
 .letter-name {
   font-family: var(--font-display);
-  font-size: 2.05rem;
-  font-weight: 700;
+  font-size: 2.5rem;
+  font-weight: 600;
   color: #163026;
-  line-height: 1.06;
+  line-height: 1.1;
 }
 
 .letter-role {
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  color: #7c5633;
-  margin-top: 3px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #59665d;
+  line-height: 1.6;
+  margin-top: 6px;
 }
 
 .letter-quote {
   font-family: var(--font-display);
   font-style: italic;
-  font-size: 1.02rem;
-  color: #463a2c;
-  margin-top: 6px;
-  line-height: 1.35;
+  font-size: 1.35rem;
+  color: #425549;
+  text-align: left;
+  margin-top: 18px;
+  line-height: 1.4;
 }
 
-.letter-fold-crease {
-  border: none;
-  border-top: 1px dashed rgba(138, 102, 66, 0.35);
-  margin: 12px 0 14px;
+.letter-contact-links {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-top: 20px;
 }
 
-.letter-actions-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
+.letter-contact-link {
+  display: inline-flex;
+  align-items: center;
   gap: 8px;
+  min-height: 44px;
+  max-width: 100%;
+  min-width: 0;
+  padding: 6px 0;
+  font-size: 0.84rem;
+  font-weight: 500;
+  line-height: 1.5;
+  color: #234435;
+  text-decoration: underline;
+  text-decoration-color: rgba(35, 68, 53, 0.28);
+  text-underline-offset: 4px;
+  overflow-wrap: anywhere;
 }
 
-.letter-btn {
+.letter-contact-link:hover {
+  text-decoration-color: currentColor;
+}
+
+.letter-contact-link span {
+  flex-shrink: 0;
+}
+
+.letter-save-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-top: 24px;
+}
+
+.letter-save-btn {
   appearance: none;
-  border-radius: 10px;
-  padding: 10px 12px;
+  min-width: 0;
+  min-height: 48px;
+  flex: 1;
+  border: 1px solid #183a2e;
+  border-radius: 8px;
+  padding: 12px;
+  background: #183a2e;
+  color: #faf7ef;
   font-family: var(--font-sans);
-  font-size: 0.78rem;
+  font-size: 0.82rem;
   font-weight: 600;
-  text-decoration: none;
+  line-height: 1.4;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 8px;
   cursor: pointer;
-  transition: all 0.16s ease;
+  transition: background-color 0.16s ease;
 }
 
-.letter-btn-primary {
-  grid-column: span 2;
-  background: #183a2e;
-  color: #faf5e8;
-  border: 1px solid #183a2e;
-  box-shadow: 0 4px 12px rgba(24, 58, 46, 0.25);
-}
-
-.letter-btn-primary:hover {
-  background: #214d3e;
-}
-
-.letter-btn-secondary {
-  background: rgba(165, 119, 82, 0.16);
-  color: #183a2e;
-  border: 1px solid rgba(138, 102, 66, 0.42);
-}
-
-.letter-btn-secondary:hover {
-  background: rgba(165, 119, 82, 0.26);
-}
-
-.letter-btn-outline {
-  background: rgba(255, 255, 255, 0.45);
-  color: #3d3022;
-  border: 1px solid rgba(138, 102, 66, 0.3);
-}
-
-.letter-btn-outline:hover {
-  background: rgba(255, 255, 255, 0.75);
-}
-
-.letter-feedback {
-  margin-top: 10px;
-  padding: 7px 10px;
-  border-radius: 8px;
-  background: rgba(24, 58, 46, 0.09);
-  border: 1px solid rgba(24, 58, 46, 0.25);
-  color: #183a2e;
-  font-size: 0.73rem;
-  font-weight: 600;
-  text-align: center;
-}
-
-.letter-qr-footer {
-  margin-top: 14px;
-  padding-top: 12px;
-  border-top: 1px dashed rgba(138, 102, 66, 0.35);
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.stamp-frame {
-  padding: 5px;
-  background: #fffdf7;
-  border: 1.5px dashed #9d7d56;
-  border-radius: 8px;
+.letter-save-btn svg {
   flex-shrink: 0;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.letter-save-btn:hover {
+  background: #285340;
+}
+
+.letter-close-btn:focus-visible,
+.letter-contact-link:focus-visible,
+.letter-save-btn:focus-visible {
+  outline: 2px solid #234435;
+  outline-offset: 4px;
+}
+
+.letter-qr {
+  flex-shrink: 0;
+  width: 96px;
+  text-align: center;
 }
 
 .letter-qr-img {
   display: block;
-  border-radius: 4px;
+  width: 96px;
+  height: 96px;
 }
 
-.letter-qr-copy {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
+.letter-qr figcaption {
+  margin-top: 6px;
+  font-size: 0.66rem;
+  line-height: 1.4;
+  color: #59665d;
 }
 
-.letter-qr-heading {
+.letter-feedback {
+  margin-top: 16px;
+  color: #234435;
   font-size: 0.75rem;
-  font-weight: 700;
-  color: #183a2e;
+  line-height: 1.5;
 }
 
-.letter-qr-text {
-  font-size: 0.69rem;
-  line-height: 1.38;
-  color: #544533;
+@media (max-width: 380px) {
+  .parchment-letter-card {
+    padding: 22px 22px 24px;
+  }
+
+  .letter-save-footer {
+    gap: 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .contact-backdrop,
+  .parchment-letter-card {
+    animation: none;
+  }
+
+  .letter-save-btn {
+    transition: none;
+  }
 }
 
 /* Game Portfolio Placeholder Modal */
