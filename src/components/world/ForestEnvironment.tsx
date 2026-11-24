@@ -3,6 +3,7 @@ import { useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import { CameraViewPreset, QualityPreset } from '../../config/personalConfig';
+import { TimeOfDayPreset } from '../../utils/timeOfDay';
 import { Lighting } from './Lighting';
 import { Terrain } from './Terrain';
 import { Stream } from './Stream';
@@ -17,6 +18,7 @@ const MODEL_PATH = '/models/crossroads_environment.glb';
 
 interface ForestEnvironmentProps {
   quality: QualityPreset;
+  timePreset: TimeOfDayPreset;
   cameraPreset: CameraViewPreset['id'];
   activeHover: string | null;
   isMailboxOpen: boolean;
@@ -29,6 +31,7 @@ interface ForestEnvironmentProps {
 
 export const ForestEnvironment: React.FC<ForestEnvironmentProps> = ({
   quality,
+  timePreset,
   cameraPreset,
   activeHover,
   isMailboxOpen,
@@ -61,7 +64,6 @@ export const ForestEnvironment: React.FC<ForestEnvironmentProps> = ({
       introStartRef.current = t;
     }
     const elapsed = t - introStartRef.current;
-    // Damped introductory settle over first 1.1 seconds
     const settleOffset = elapsed < 1.1 ? Math.exp(-elapsed * 4.2) * 0.14 : 0;
     const breathOffset = Math.sin(t * 1.15) * 0.016;
     collectibleGroupRef.current.position.y = -0.18 - settleOffset + breathOffset;
@@ -69,7 +71,7 @@ export const ForestEnvironment: React.FC<ForestEnvironmentProps> = ({
 
   return (
     <group name="TheCrossroadsWorld">
-      <Lighting quality={quality} />
+      <Lighting quality={quality} timePreset={timePreset} />
 
       <CameraController
         activePreset={cameraPreset}
@@ -86,7 +88,11 @@ export const ForestEnvironment: React.FC<ForestEnvironmentProps> = ({
           shadows={quality.shadows}
           onSelectPlaque={onSelectMailbox}
         />
-        <Stream nodes={gltf.nodes} enableWaterShader={quality.enableWaterShader} />
+        <Stream
+          nodes={gltf.nodes}
+          enableWaterShader={quality.enableWaterShader}
+          timePreset={timePreset}
+        />
         <Bridge nodes={gltf.nodes} shadows={quality.shadows} />
         <TreesAndVegetation nodes={gltf.nodes} quality={quality} />
         <WoodenSigns

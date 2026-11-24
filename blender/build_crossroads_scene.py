@@ -1286,10 +1286,10 @@ def build_stream_and_bridge(materials):
         ),
     )
 
-    c_water_deep = hex_to_rgba("#1A5450")
-    c_water_mid = hex_to_rgba("#2F766F")
-    c_water_shallow = hex_to_rgba("#598A77")
-    c_water_foam = hex_to_rgba("#9EC6BB")
+    c_water_deep = hex_to_rgba("#1A6A65")
+    c_water_mid = hex_to_rgba("#328F87")
+    c_water_shallow = hex_to_rgba("#66B0A1")
+    c_water_foam = hex_to_rgba("#C2EFE6")
 
     def water_color_fn(wx, wy, wz, nx, ny, nz):
         cz = stream_center_z(wx)
@@ -1643,9 +1643,9 @@ def refine_tree_trunk_and_canopy_colors(trunk_obj, canopy_obj, palette_shift=0):
         max_r = max(0.2, max(math.hypot(v.co.x - cx, v.co.y - cy) for v in verts))
 
         palettes = [
-            ((0.74, 0.80, 0.72), (1.0, 1.0, 0.96)),  # Lush emerald-olive
-            ((0.70, 0.78, 0.74), (0.96, 1.0, 0.98)),  # Cool forest jade
-            ((0.76, 0.82, 0.68), (1.0, 1.0, 0.92)),   # Sun-warmed woodland moss
+            ((0.62, 0.72, 0.65), (0.88, 0.96, 0.88)),  # Deep Hero Oak emerald-jade
+            ((0.58, 0.68, 0.66), (0.84, 0.94, 0.91)),  # Deep Boreal Pine conifer green
+            ((0.64, 0.74, 0.64), (0.91, 0.96, 0.86)),  # Mature Woodland Broadleaf moss-green
         ]
         c_shadow, c_sun = palettes[palette_shift % len(palettes)]
 

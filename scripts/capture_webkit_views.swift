@@ -192,6 +192,23 @@ class SnapshotRunner: NSObject, WKNavigationDelegate {
         await loadUrl("\(baseUrl)/?view=closeupMailboxBase")
         await saveSnapshot(filenames: ["16_closeup_mailbox_and_base.png"])
 
+        // 17-20. Time-of-Day Atmospheric Lighting Views (America/Toronto: Morning, Midday, Golden Hour, Evening/Night)
+        setupWindow(width: 1440, height: 900, isMobile: false)
+        await loadUrl("\(baseUrl)/?view=initial&time=morning")
+        await saveSnapshot(filenames: ["time_01_morning.png"])
+
+        _ = await evalJS("window.__setCrossroadsTimeOfDay && window.__setCrossroadsTimeOfDay('midday')")
+        await sleepMs(350)
+        await saveSnapshot(filenames: ["time_02_midday.png"])
+
+        _ = await evalJS("window.__setCrossroadsTimeOfDay && window.__setCrossroadsTimeOfDay('golden_hour')")
+        await sleepMs(350)
+        await saveSnapshot(filenames: ["time_03_golden_hour.png"])
+
+        _ = await evalJS("window.__setCrossroadsTimeOfDay && window.__setCrossroadsTimeOfDay('night')")
+        await sleepMs(350)
+        await saveSnapshot(filenames: ["time_04_night.png"])
+
         NSApplication.shared.terminate(nil)
     }
 }

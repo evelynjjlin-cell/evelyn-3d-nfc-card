@@ -5,6 +5,7 @@ let cachedWoodAlbedo: THREE.CanvasTexture | null = null;
 let cachedWoodRoughness: THREE.CanvasTexture | null = null;
 let cachedGrassBump: THREE.CanvasTexture | null = null;
 let cachedFoliageBump: THREE.CanvasTexture | null = null;
+let cachedWaterRippleBump: THREE.CanvasTexture | null = null;
 const cachedSignTextures: Record<string, THREE.CanvasTexture> = {};
 
 /**
@@ -224,6 +225,47 @@ export function getFoliageBumpTexture(): THREE.CanvasTexture {
   texture.wrapT = THREE.RepeatWrapping;
   texture.repeat.set(4, 4);
   cachedFoliageBump = texture;
+  return texture;
+}
+
+/**
+ * Generates a tileable flowing water-wavelet bump map (512x256) so sunlight and sky light
+ * break into shimmering specular ripples across the woodland creek surface.
+ */
+export function getWaterRippleBumpTexture(): THREE.CanvasTexture {
+  if (cachedWaterRippleBump) return cachedWaterRippleBump;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = 512;
+  canvas.height = 256;
+  const ctx = canvas.getContext('2d');
+  if (ctx) {
+    ctx.fillStyle = '#808080';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Multi-frequency overlapping stream wavelets
+    for (let y = 0; y < canvas.height; y += 2) {
+      for (let x = 0; x < canvas.width; x += 4) {
+        const u = (x / canvas.width) * Math.PI * 2;
+        const v = (y / canvas.height) * Math.PI * 2;
+        const w1 = Math.sin(u * 4.0 + Math.cos(v * 2.0) * 1.5);
+        const w2 = Math.cos(u * 7.0 - v * 3.0 + Math.sin(u * 2.0));
+        const w3 = Math.sin(u * 11.0 + v * 5.0) * 0.5;
+        const val = Math.max(
+          42,
+          Math.min(218, Math.round(128 + (w1 * 0.45 + w2 * 0.35 + w3 * 0.2) * 58))
+        );
+        ctx.fillStyle = `rgb(${val}, ${val}, ${val})`;
+        ctx.fillRect(x, y, 4, 2);
+      }
+    }
+  }
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.wrapT = THREE.RepeatWrapping;
+  texture.repeat.set(5, 2.5);
+  cachedWaterRippleBump = texture;
   return texture;
 }
 

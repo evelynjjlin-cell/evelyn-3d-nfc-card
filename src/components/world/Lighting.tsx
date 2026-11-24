@@ -1,15 +1,22 @@
-import React, { useMemo, useRef } from 'react';
-import { useFrame } from '@react-three/fiber';
+import React, { useEffect, useMemo, useRef } from 'react';
+import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { QualityPreset } from '../../config/personalConfig';
+import { TimeOfDayPreset } from '../../utils/timeOfDay';
 
 interface LightingProps {
   quality: QualityPreset;
+  timePreset: TimeOfDayPreset;
 }
 
-export const Lighting: React.FC<LightingProps> = ({ quality }) => {
+export const Lighting: React.FC<LightingProps> = ({ quality, timePreset }) => {
+  const { gl } = useThree();
   const sporesRef = useRef<THREE.InstancedMesh>(null);
   const dummy = useMemo(() => new THREE.Object3D(), []);
+
+  useEffect(() => {
+    gl.setClearColor(timePreset.clearColor, 1);
+  }, [gl, timePreset.clearColor]);
 
   const sporeSeeds = useMemo(() => {
     const count = Math.min(24, quality.particlesCount);
@@ -50,20 +57,23 @@ export const Lighting: React.FC<LightingProps> = ({ quality }) => {
 
   return (
     <group name="CrossroadsLighting">
-      {/* Warm luminous forest studio fog */}
-      <fog attach="fog" args={['#173229', 26, 46]} />
+      {/* Time-of-day atmospheric studio fog */}
+      <fog attach="fog" args={[timePreset.clearColor, 26, 46]} />
 
-      {/* Balanced ambient base */}
-      <ambientLight intensity={0.68} color="#EAF2E8" />
+      {/* Balanced ambient base tuned to America/Toronto time of day */}
+      <ambientLight intensity={timePreset.ambientIntensity} color={timePreset.ambientColor} />
 
-      {/* Warm sunlit sky to deep woodland moss hemisphere fill */}
-      <hemisphereLight args={['#FAF5E6', '#2A4839', 1.05]} position={[0, 12, 0]} />
+      {/* Sky-to-moss hemisphere bounce fill */}
+      <hemisphereLight
+        args={[timePreset.hemiSkyColor, timePreset.hemiGroundColor, timePreset.hemiIntensity]}
+        position={[0, 12, 0]}
+      />
 
-      {/* Key Light: Warm late-afternoon sun */}
+      {/* Key Light: Time-of-day sun or moonlight */}
       <directionalLight
-        position={[7.2, 11.2, 6.4]}
-        intensity={2.25}
-        color="#FFF0CE"
+        position={timePreset.sunPosition}
+        intensity={timePreset.sunIntensity}
+        color={timePreset.sunColor}
         castShadow={quality.shadows}
         shadow-mapSize-width={quality.shadowMapSize}
         shadow-mapSize-height={quality.shadowMapSize}
@@ -76,19 +86,45 @@ export const Lighting: React.FC<LightingProps> = ({ quality }) => {
         shadow-bias={-0.0004}
       />
 
-      {/* Cool sage fill from the west so shadows stay luminous and readable */}
-      <directionalLight position={[-6.8, 6.0, 4.2]} intensity={0.82} color="#C2DFCE" />
+      {/* Secondary atmospheric fill keeping shadows luminous and readable */}
+      <directionalLight
+        position={timePreset.fillPosition}
+        intensity={timePreset.fillIntensity}
+        color={timePreset.fillColor}
+      />
 
-      {/* Soft golden rim backlight separating tree canopies from the background */}
-      <directionalLight position={[-1.2, 7.5, -8.0]} intensity={0.78} color="#FFE4B5" />
+      {/* Rim backlight separating tree canopies from the background */}
+      <directionalLight
+        position={timePreset.rimPosition}
+        intensity={timePreset.rimIntensity}
+        color={timePreset.rimColor}
+      />
 
-      {/* Subtle, restrained soft ground shadow beneath the floating island (no heavy black disc) */}
+      {/* Dedicated low-angle creek water specular glint light */}
+      <directionalLight
+        position={[-1.4, 4.8, -5.2]}
+        intensity={timePreset.waterGlintIntensity * 0.65}
+        color={timePreset.waterGlintColor}
+      />
+
+      {/* Warm crossroads lantern fill during Golden Hour & Evening/Night so signs, bridge & mailbox stay inviting */}
+      {timePreset.lanternIntensity > 0.01 && (
+        <pointLight
+          position={[0.0, 1.75, 0.25]}
+          intensity={timePreset.lanternIntensity}
+          color={timePreset.lanternColor}
+          distance={7.5}
+          decay={1.4}
+        />
+      )}
+
+      {/* Subtle soft ground shadow beneath the floating island */}
       <mesh position={[0, -2.55, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow={false}>
         <circleGeometry args={[3.3, 48]} />
-        <meshBasicMaterial color="#0D1F19" transparent opacity={0.22} />
+        <meshBasicMaterial color="#0A1916" transparent opacity={0.22} />
       </mesh>
 
-      {/* Restrained ambient golden dust motes */}
+      {/* Restrained ambient forest dust / firefly motes */}
       {sporeSeeds.length > 0 && (
         <instancedMesh
           ref={sporesRef}
@@ -96,7 +132,11 @@ export const Lighting: React.FC<LightingProps> = ({ quality }) => {
           frustumCulled={false}
         >
           <sphereGeometry args={[1, 8, 8]} />
-          <meshBasicMaterial color="#F6E6BC" transparent opacity={0.52} />
+          <meshBasicMaterial
+            color={timePreset.sporeColor}
+            transparent
+            opacity={timePreset.sporeOpacity}
+          />
         </instancedMesh>
       )}
     </group>

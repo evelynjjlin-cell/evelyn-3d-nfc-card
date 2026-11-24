@@ -7,6 +7,12 @@ import {
   PERSONAL_CONFIG,
   QualityLevel,
 } from './config/personalConfig';
+import {
+  getInitialTimeOfDayPeriod,
+  getTorontoTimeState,
+  TIME_OF_DAY_PRESETS,
+  TimeOfDayPeriod,
+} from './utils/timeOfDay';
 import { ForestEnvironment } from './components/world/ForestEnvironment';
 import { SignId } from './components/world/WoodenSigns';
 import { IdentityOverlay } from './components/ui/IdentityOverlay';
@@ -18,6 +24,7 @@ import { downloadVCard } from './utils/nfcAndVcard';
 declare global {
   interface Window {
     __setCrossroadsView?: (preset: CameraViewPreset['id']) => void;
+    __setCrossroadsTimeOfDay?: (period: TimeOfDayPeriod) => void;
     __openMailboxLetter?: (open: boolean) => void;
     __openGameTrailModal?: (open: boolean) => void;
     __crossroadsSceneReady?: boolean;
@@ -53,6 +60,7 @@ export const App: React.FC = () => {
   const [cameraPreset, setCameraPreset] = useState<CameraViewPreset['id']>(() =>
     getInitialPresetFromUrl()
   );
+  const [timeState, setTimeState] = useState(() => getInitialTimeOfDayPeriod());
   const [activeHover, setActiveHover] = useState<string | null>(null);
   const [isMailboxOpen, setIsMailboxOpen] = useState<boolean>(false);
   const [isContactPanelOpen, setIsContactPanelOpen] = useState<boolean>(false);
@@ -62,14 +70,42 @@ export const App: React.FC = () => {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const activeQualityPreset = PERSONAL_CONFIG.qualityPresets[qualityLevel];
+  const activeTimePreset = TIME_OF_DAY_PRESETS[timeState.period];
 
   useEffect(() => {
     setWebGLSupported(checkWebGLAvailable());
   }, []);
 
+  // Keep lighting synchronized with current local time in America/Toronto unless overridden
+  useEffect(() => {
+    if (timeState.isOverridden) return;
+    const interval = window.setInterval(() => {
+      const live = getTorontoTimeState();
+      setTimeState((prev) =>
+        prev.isOverridden
+          ? prev
+          : {
+              period: live.period,
+              isOverridden: false,
+              formattedTime: live.formattedTime,
+            }
+      );
+    }, 60_000);
+    return () => window.clearInterval(interval);
+  }, [timeState.isOverridden]);
+
   useEffect(() => {
     window.__setCrossroadsView = (preset: CameraViewPreset['id']) => {
       setCameraPreset(preset);
+    };
+    window.__setCrossroadsTimeOfDay = (period: TimeOfDayPeriod) => {
+      if (period in TIME_OF_DAY_PRESETS) {
+        setTimeState((prev) => ({
+          ...prev,
+          period,
+          isOverridden: true,
+        }));
+      }
     };
     window.__openMailboxLetter = (open: boolean) => {
       setIsMailboxOpen(open);
@@ -80,6 +116,7 @@ export const App: React.FC = () => {
     };
     return () => {
       delete window.__setCrossroadsView;
+      delete window.__setCrossroadsTimeOfDay;
       delete window.__openMailboxLetter;
       delete window.__openGameTrailModal;
     };
@@ -141,7 +178,11 @@ export const App: React.FC = () => {
   }, []);
 
   return (
-    <main className="app-viewport">
+    <main
+      className="app-viewport"
+      style={{ background: activeTimePreset.viewportGradient }}
+      data-time-of-day={activeTimePreset.id}
+    >
       {/* Real-Time 3D Forest Collectible Canvas */}
       {webGLSupported ? (
         <div className="canvas-wrapper" aria-label="Interactive 3D Forest Crossroads Collectible">
@@ -163,7 +204,7 @@ export const App: React.FC = () => {
               toneMappingExposure: 1.08,
             }}
             onCreated={({ gl, scene, camera, advance }) => {
-              gl.setClearColor('#173229', 1);
+              gl.setClearColor(activeTimePreset.clearColor, 1);
               window.__r3fRenderNow = () => {
                 for (let i = 0; i < 36; i++) {
                   advance(performance.now() + i * 16);
@@ -179,6 +220,7 @@ export const App: React.FC = () => {
             <Suspense fallback={null}>
               <ForestEnvironment
                 quality={activeQualityPreset}
+                timePreset={activeTimePreset}
                 cameraPreset={cameraPreset}
                 activeHover={activeHover}
                 isMailboxOpen={isMailboxOpen}
@@ -226,7 +268,7 @@ export const App: React.FC = () => {
         onStatusToast={showToast}
       />
 
-      {/* Play Path Placeholder Modal ("New world in progress.") */}
+      {/* Game Trail Placeholder Modal ("New world in progress.") */}
       <GamePortfolioModal
         isOpen={isGameModalOpen}
         onClose={() => setIsGameModalOpen(false)}

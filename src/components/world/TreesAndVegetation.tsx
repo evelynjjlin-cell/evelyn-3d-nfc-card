@@ -9,13 +9,13 @@ interface TreesAndVegetationProps {
 }
 
 const TREE_DEFS = [
-  { id: 'Tree_NW_Hero', phase: 0.0 },
-  { id: 'Tree_N_Left', phase: 1.1 },
-  { id: 'Tree_N_Center', phase: 2.2 },
-  { id: 'Tree_N_Right', phase: 3.3 },
-  { id: 'Tree_NE_Hero', phase: 4.4 },
-  { id: 'Tree_W_Flank', phase: 5.1 },
-  { id: 'Tree_E_Flank', phase: 5.9 },
+  { id: 'Tree_NW_Hero', phase: 0.0, tint: '#CCE4D4' },
+  { id: 'Tree_N_Left', phase: 1.1, tint: '#C2DEC8' },
+  { id: 'Tree_N_Center', phase: 2.2, tint: '#D0E6D6' },
+  { id: 'Tree_N_Right', phase: 3.3, tint: '#C4E0CA' },
+  { id: 'Tree_NE_Hero', phase: 4.4, tint: '#CCE4D2' },
+  { id: 'Tree_W_Flank', phase: 5.1, tint: '#D2E8D8' },
+  { id: 'Tree_E_Flank', phase: 5.9, tint: '#C0DCC8' },
 ];
 
 /**
@@ -30,6 +30,7 @@ function configureGlbMaterial(
     roughness?: number;
     metalness?: number;
     useVertexColors?: boolean;
+    tintColor?: string;
   }
 ): THREE.MeshStandardMaterial {
   const baseMat = Array.isArray(rawMat) ? rawMat[0] : rawMat;
@@ -37,6 +38,10 @@ function configureGlbMaterial(
     baseMat && (baseMat as THREE.MeshStandardMaterial).isMeshStandardMaterial
       ? (baseMat as THREE.MeshStandardMaterial).clone()
       : new THREE.MeshStandardMaterial({ color: '#ffffff' });
+
+  if (options.tintColor) {
+    mat.color.set(options.tintColor);
+  }
 
   mat.roughness = options.roughness ?? 0.78;
   mat.metalness = options.metalness ?? 0.01;
@@ -81,6 +86,7 @@ export const TreesAndVegetation: React.FC<TreesAndVegetationProps> = ({ nodes, q
       roughness?: number;
       metalness?: number;
       useVertexColors?: boolean;
+      tintColor?: string;
     }
   ): { geometry: THREE.BufferGeometry; material: THREE.MeshStandardMaterial } | null => {
     const obj = nodes[name] as THREE.Mesh | undefined;
@@ -106,8 +112,9 @@ export const TreesAndVegetation: React.FC<TreesAndVegetationProps> = ({ nodes, q
       canopy: getMeshAndMaterial(`${t.id}_Canopy`, {
         isAlphaCutout: true,
         alphaTest: 0.28,
-        roughness: 0.76,
+        roughness: 0.78,
         metalness: 0.01,
+        tintColor: t.tint,
       }),
     }));
   }, [nodes]);
@@ -117,8 +124,9 @@ export const TreesAndVegetation: React.FC<TreesAndVegetationProps> = ({ nodes, q
       getMeshAndMaterial('Forest_Shrubs', {
         isAlphaCutout: true,
         alphaTest: 0.28,
-        roughness: 0.76,
+        roughness: 0.78,
         metalness: 0.01,
+        tintColor: '#C4E0CC',
       }),
     [nodes]
   );
@@ -139,9 +147,10 @@ export const TreesAndVegetation: React.FC<TreesAndVegetationProps> = ({ nodes, q
       getMeshAndMaterial('Forest_Ferns', {
         isAlphaCutout: true,
         alphaTest: 0.26,
-        roughness: 0.72,
+        roughness: 0.74,
         metalness: 0.01,
         useVertexColors: false,
+        tintColor: '#AED4B8',
       }),
     [nodes]
   );
@@ -151,9 +160,10 @@ export const TreesAndVegetation: React.FC<TreesAndVegetationProps> = ({ nodes, q
       getMeshAndMaterial('Forest_Grass', {
         isAlphaCutout: true,
         alphaTest: 0.24,
-        roughness: 0.74,
+        roughness: 0.76,
         metalness: 0.01,
         useVertexColors: false,
+        tintColor: '#A2C8AE',
       }),
     [nodes]
   );
