@@ -14,7 +14,11 @@ import { Mailbox } from './Mailbox';
 import { IdentityPlaque3D } from './IdentityPlaque3D';
 import { CameraController } from './CameraController';
 
-const MODEL_PATH = '/models/crossroads_environment.glb';
+declare const __GLB_CONTENT_HASH__: string;
+
+const MODEL_PATH = `/models/crossroads_environment.glb?v=${
+  typeof __GLB_CONTENT_HASH__ !== 'undefined' ? __GLB_CONTENT_HASH__ : 'v7'
+}`;
 
 interface ForestEnvironmentProps {
   quality: QualityPreset;
